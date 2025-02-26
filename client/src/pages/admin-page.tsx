@@ -11,15 +11,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, EyeOff } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useLocation } from "wouter";
+import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, EyeOff, Edit, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [_, navigate] = useLocation();
   const [selectedPaste, setSelectedPaste] = useState<Paste | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [pasteToEdit, setPasteToEdit] = useState<Paste | null>(null);
 
   // Get all users
   const { 
@@ -73,6 +83,7 @@ export default function AdminPage() {
       });
       refetchPastes();
       queryClient.invalidateQueries({ queryKey: ["/api/pastes/clown"] });
+      setIsEditDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
@@ -105,6 +116,47 @@ export default function AdminPage() {
     },
   });
 
+  // Edit paste form schema
+  const editPasteSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    content: z.string().min(1, "Content is required"),
+    isPrivate: z.boolean().default(false),
+    isClown: z.boolean().default(false),
+  });
+
+  // Edit paste form
+  const editPasteForm = useForm<z.infer<typeof editPasteSchema>>({
+    resolver: zodResolver(editPasteSchema),
+    defaultValues: {
+      title: "",
+      content: "",
+      isPrivate: false,
+      isClown: false,
+    },
+  });
+
+  // Handle opening edit dialog
+  const handleEditPaste = (paste: Paste) => {
+    setPasteToEdit(paste);
+    editPasteForm.reset({
+      title: paste.title,
+      content: paste.content,
+      isPrivate: paste.isPrivate,
+      isClown: paste.isClown,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  // Handle submit edit form
+  const onSubmitEditForm = (data: z.infer<typeof editPasteSchema>) => {
+    if (pasteToEdit) {
+      updatePasteMutation.mutate({
+        id: pasteToEdit.id,
+        data: data,
+      });
+    }
+  };
+
   const formatDate = (date: Date | string) => {
     return format(new Date(date), "MMM d, yyyy");
   };
@@ -122,6 +174,10 @@ export default function AdminPage() {
 
   const handleDeletePaste = (pasteId: number) => {
     deletePasteMutation.mutate(pasteId);
+  };
+
+  const navigateToUserProfile = (userId: number) => {
+    navigate(`/user/${userId}`);
   };
 
   if (!user?.isAdmin) {
@@ -192,7 +248,15 @@ export default function AdminPage() {
                         {users.map((u) => (
                           <TableRow key={u.id}>
                             <TableCell>{u.id}</TableCell>
-                            <TableCell className="font-medium">{u.username}</TableCell>
+                            <TableCell className="font-medium">
+                              <Button 
+                                variant="link" 
+                                className="p-0 h-auto font-medium" 
+                                onClick={() => navigateToUserProfile(u.id)}
+                              >
+                                {u.username}
+                              </Button>
+                            </TableCell>
                             <TableCell>{u.ipAddress || 'Unknown'}</TableCell>
                             <TableCell>
                               {u.isAdmin ? (
@@ -205,29 +269,39 @@ export default function AdminPage() {
                             </TableCell>
                             <TableCell>{formatDate(u.createdAt)}</TableCell>
                             <TableCell className="text-right">
-                              {u.id !== user.id && (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm">
-                                      <UserX className="h-4 w-4 mr-1" /> Delete
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        This will permanently delete the user and all their pastes.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteUser(u.id)}>
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              )}
+                              <div className="flex justify-end gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => navigateToUserProfile(u.id)}
+                                >
+                                  <UserIcon className="h-4 w-4 mr-1" /> Profile
+                                </Button>
+
+                                {u.id !== user.id && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="destructive" size="sm">
+                                        <UserX className="h-4 w-4 mr-1" /> Delete
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This will permanently delete the user and all their pastes.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteUser(u.id)}>
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -275,7 +349,15 @@ export default function AdminPage() {
                           <TableRow key={p.id}>
                             <TableCell>{p.id}</TableCell>
                             <TableCell className="font-medium">{p.title}</TableCell>
-                            <TableCell>{p.userId}</TableCell>
+                            <TableCell>
+                              <Button 
+                                variant="link" 
+                                className="p-0 h-auto" 
+                                onClick={() => navigateToUserProfile(p.userId)}
+                              >
+                                {p.userId}
+                              </Button>
+                            </TableCell>
                             <TableCell>
                               {p.isPrivate ? (
                                 <Badge variant="outline" className="bg-zinc-900 text-white">
@@ -288,10 +370,19 @@ export default function AdminPage() {
                               )}
                             </TableCell>
                             <TableCell>
-                              <Switch 
-                                checked={p.isClown}
-                                onCheckedChange={() => handleMarkAsClown(p)}
-                              />
+                              <div className="flex items-center gap-2">
+                                <Switch 
+                                  checked={p.isClown}
+                                  onCheckedChange={() => handleMarkAsClown(p)}
+                                />
+                                <Button
+                                  variant={p.isClown ? "destructive" : "outline"}
+                                  size="sm"
+                                  onClick={() => handleMarkAsClown(p)}
+                                >
+                                  {p.isClown ? "Remove from Clown" : "Add to Clown"}
+                                </Button>
+                              </div>
                             </TableCell>
                             <TableCell>{formatDate(p.createdAt)}</TableCell>
                             <TableCell>
@@ -321,6 +412,14 @@ export default function AdminPage() {
                                   <a href={`/paste/${p.id}`} target="_blank" rel="noopener noreferrer">
                                     <Link className="h-4 w-4" />
                                   </a>
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditPaste(p)}
+                                >
+                                  <Edit className="h-4 w-4" />
                                 </Button>
 
                                 <AlertDialog>
@@ -360,6 +459,104 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Paste Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Paste</DialogTitle>
+              <DialogDescription>
+                Make changes to the paste content
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...editPasteForm}>
+              <form onSubmit={editPasteForm.handleSubmit(onSubmitEditForm)} className="space-y-4">
+                <FormField
+                  control={editPasteForm.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Paste title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editPasteForm.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Content</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Paste content..." 
+                          className="min-h-[200px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-4">
+                  <FormField
+                    control={editPasteForm.control}
+                    name="isPrivate"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <Switch 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Private</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editPasteForm.control}
+                    name="isClown"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <Switch 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Mark as Clown</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => setIsEditDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={updatePasteMutation.isPending}
+                  >
+                    {updatePasteMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </PageLayout>
   );

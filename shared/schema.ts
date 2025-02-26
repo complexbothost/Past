@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   ipAddress: text("ip_address"),
+  bio: text("bio").default(""),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -34,8 +35,24 @@ export const insertPasteSchema = createInsertSchema(pastes).pick({
   isPrivate: true,
 });
 
+// Comment schema
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  userId: integer("user_id").notNull(),
+  profileUserId: integer("profile_user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCommentSchema = createInsertSchema(comments).pick({
+  content: true,
+  profileUserId: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertPaste = z.infer<typeof insertPasteSchema>;
 export type Paste = typeof pastes.$inferSelect;
+export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type Comment = typeof comments.$inferSelect;

@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, pastes, type Paste, type InsertPaste } from "@shared/schema";
+import { users, type User, type InsertUser, pastes, type Paste, type InsertPaste, comments, type Comment, type InsertComment } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -22,6 +22,11 @@ export interface IStorage {
   updatePaste(id: number, data: Partial<Paste>): Promise<Paste | undefined>;
   deletePaste(id: number): Promise<boolean>;
 
+  // Comment operations
+  getProfileComments(profileUserId: number): Promise<Comment[]>;
+  createComment(comment: InsertComment & { userId: number }): Promise<Comment>;
+  deleteComment(id: number): Promise<boolean>;
+
   // Session storage
   sessionStore: session.SessionStore;
 }
@@ -29,15 +34,19 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private pastes: Map<number, Paste>;
+  private comments: Map<number, Comment>;
   sessionStore: session.SessionStore;
   userCurrentId: number;
   pasteCurrentId: number;
+  commentCurrentId: number;
 
   constructor() {
     this.users = new Map();
     this.pastes = new Map();
+    this.comments = new Map();
     this.userCurrentId = 1;
     this.pasteCurrentId = 1;
+    this.commentCurrentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
     });
@@ -47,6 +56,7 @@ export class MemStorage implements IStorage {
       username: "krane",
       password: "password123", // Changed from hashed password to plaintext for easier access
       ipAddress: "127.0.0.1",
+      bio: "Admin of DoxNightmare. I can see everything.",
       isAdmin: true,
       createdAt: new Date(),
     });
@@ -63,12 +73,13 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async createUser(insertUser: InsertUser & { ipAddress?: string, isAdmin?: boolean, createdAt?: Date }): Promise<User> {
+  async createUser(insertUser: InsertUser & { ipAddress?: string, bio?: string, isAdmin?: boolean, createdAt?: Date }): Promise<User> {
     const id = this.userCurrentId++;
     const user: User = { 
       ...insertUser, 
       id, 
       ipAddress: insertUser.ipAddress || null,
+      bio: insertUser.bio || "",
       isAdmin: insertUser.isAdmin || false,
       createdAt: insertUser.createdAt || new Date() 
     };
@@ -103,6 +114,7 @@ export class MemStorage implements IStorage {
     const paste: Paste = { 
       ...insertPaste, 
       id, 
+      isPrivate: insertPaste.isPrivate || false,
       isClown: false,
       createdAt: new Date() 
     };
@@ -139,6 +151,28 @@ export class MemStorage implements IStorage {
 
   async deletePaste(id: number): Promise<boolean> {
     return this.pastes.delete(id);
+  }
+
+  // Comment operations
+  async getProfileComments(profileUserId: number): Promise<Comment[]> {
+    return Array.from(this.comments.values()).filter(
+      (comment) => comment.profileUserId === profileUserId
+    );
+  }
+
+  async createComment(insertComment: InsertComment & { userId: number }): Promise<Comment> {
+    const id = this.commentCurrentId++;
+    const comment: Comment = {
+      ...insertComment,
+      id,
+      createdAt: new Date()
+    };
+    this.comments.set(id, comment);
+    return comment;
+  }
+
+  async deleteComment(id: number): Promise<boolean> {
+    return this.comments.delete(id);
   }
 }
 

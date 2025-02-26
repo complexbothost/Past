@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertPasteSchema } from "@shared/schema";
+import { insertPasteSchema, insertCommentSchema } from "@shared/schema";
 import { z } from "zod";
 
 // Middleware to check if user is authenticated
@@ -83,6 +83,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint: Update paste
+  app.patch("/api/pastes/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid paste ID" });
+      }
+
+      const paste = await storage.getPaste(id);
+      if (!paste) {
+        return res.status(404).json({ message: "Paste not found" });
+      }
+
+      // Only the paste owner or admin can edit
+      if (req.user!.id !== paste.userId && !req.user!.isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to edit this paste" });
+      }
+
+      const updatedPaste = await storage.updatePaste(id, req.body);
+      res.json(updatedPaste);
+    } catch (err) {
+      res.status(500).json({ message: "Error updating paste" });
+    }
+  });
+
   app.delete("/api/pastes/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -114,6 +139,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(pastes);
     } catch (err) {
       res.status(500).json({ message: "Error retrieving user pastes" });
+    }
+  });
+
+  // New endpoint: Get user profile
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const user = await storage.getUser(id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving user" });
+    }
+  });
+
+  // New endpoint: Get user's pastes
+  app.get("/api/users/:id/pastes", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const pastes = await storage.getUserPastes(id);
+      // Filter out private pastes unless the requester is the owner or admin
+      const filteredPastes = pastes.filter(paste => {
+        return !paste.isPrivate || 
+                (req.user && (req.user.id === paste.userId || req.user.isAdmin));
+      });
+
+      res.json(filteredPastes);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving user pastes" });
+    }
+  });
+
+  // New endpoint: Update user bio
+  app.patch("/api/users/:id/bio", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      // Only the user or admin can update the bio
+      if (req.user!.id !== id && !req.user!.isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to update this user's bio" });
+      }
+
+      const { bio } = req.body;
+      if (typeof bio !== 'string') {
+        return res.status(400).json({ message: "Bio must be a string" });
+      }
+
+      const user = await storage.updateUser(id, { bio });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (err) {
+      res.status(500).json({ message: "Error updating user bio" });
+    }
+  });
+
+  // New endpoint: Get user profile comments
+  app.get("/api/users/:id/comments", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const comments = await storage.getProfileComments(id);
+      res.json(comments);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving comments" });
+    }
+  });
+
+  // New endpoint: Add comment to user profile
+  app.post("/api/users/:id/comments", isAuthenticated, async (req, res) => {
+    try {
+      const profileUserId = parseInt(req.params.id);
+      if (isNaN(profileUserId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const commentData = insertCommentSchema.parse({
+        ...req.body,
+        profileUserId
+      });
+
+      const comment = await storage.createComment({
+        ...commentData,
+        userId: req.user!.id
+      });
+
+      res.status(201).json(comment);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid comment data", errors: err.errors });
+      }
+      res.status(500).json({ message: "Error creating comment" });
+    }
+  });
+
+  // New endpoint: Delete comment
+  app.delete("/api/comments/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid comment ID" });
+      }
+
+      // Only allow deletion by admin (for moderation purposes)
+      if (!req.user!.isAdmin) {
+        return res.status(403).json({ message: "Only admins can delete comments" });
+      }
+
+      const success = await storage.deleteComment(id);
+      if (!success) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      res.status(200).json({ message: "Comment deleted successfully" });
+    } catch (err) {
+      res.status(500).json({ message: "Error deleting comment" });
     }
   });
 

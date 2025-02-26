@@ -7,6 +7,7 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import PastePage from "@/pages/paste-page";
 import AdminPage from "@/pages/admin-page";
+import UserProfilePage from "@/pages/user-profile-page"; // Added import
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 
@@ -15,6 +16,7 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/paste/:id" component={PastePage} />
+      <ProtectedRoute path="/user/:id" component={UserProfilePage} />
       <AdminRoute path="/admin" component={AdminPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
