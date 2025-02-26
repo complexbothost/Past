@@ -642,6 +642,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Audit Log Routes (admin only)
+  app.get("/api/admin/audit-logs", isAdmin, async (req, res) => {
+    try {
+      const logs = await storage.getAuditLogs();
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving audit logs" });
+    }
+  });
+
+  app.get("/api/admin/audit-logs/deleted-users", isAdmin, async (req, res) => {
+    try {
+      const logs = await storage.getDeletedUsers();
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving deleted users logs" });
+    }
+  });
+
+  app.get("/api/admin/audit-logs/deleted-pastes", isAdmin, async (req, res) => {
+    try {
+      const logs = await storage.getDeletedPastes();
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving deleted pastes logs" });
+    }
+  });
+
+  app.get("/api/admin/audit-logs/edits", isAdmin, async (req, res) => {
+    try {
+      const logs = await storage.getEditLogs();
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving edit logs" });
+    }
+  });
+
+  app.get("/api/admin/audit-logs/user/:id", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const logs = await storage.getAuditLogsByUser(userId);
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving user audit logs" });
+    }
+  });
+
+  app.get("/api/admin/audit-logs/action/:action", isAdmin, async (req, res) => {
+    try {
+      const action = req.params.action;
+      const logs = await storage.getAuditLogsByAction(action);
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving action audit logs" });
+    }
+  });
+
   app.use('/uploads', express.static(uploadDir));
 
   const httpServer = createServer(app);

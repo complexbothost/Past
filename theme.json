@@ -1,6 +1,6 @@
 {
-  "variant": "professional",
-  "primary": "hsl(0, 0%, 100%)",
-  "appearance": "dark",
-  "radius": 1.0
+  "variant": "vibrant",
+  "primary": "oklch(70% 0.1 350)",
+  "appearance": "system",
+  "radius": 1
 }

@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, pastes, type Paste, type InsertPaste, comments, type Comment, type InsertComment } from "@shared/schema";
+import { users, type User, type InsertUser, pastes, type Paste, type InsertPaste, comments, type Comment, type InsertComment, type AuditLog, type InsertAuditLog, AuditLogAction } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -37,6 +37,15 @@ export interface IStorage {
   isIPRestricted(ip: string): Promise<boolean>;
   getAllRestrictedIPs(): Promise<Array<{ ip: string, reason: string, restrictedBy: number, restrictedAt: Date }>>;
 
+  // Audit log operations
+  createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogs(): Promise<AuditLog[]>;
+  getAuditLogsByUser(userId: number): Promise<AuditLog[]>;
+  getAuditLogsByAction(action: string): Promise<AuditLog[]>;
+  getDeletedUsers(): Promise<AuditLog[]>;
+  getDeletedPastes(): Promise<AuditLog[]>;
+  getEditLogs(): Promise<AuditLog[]>;
+
   // Session storage
   sessionStore: SessionStore;
 }
@@ -46,19 +55,23 @@ export class MemStorage implements IStorage {
   private pastes: Map<number, Paste>;
   private comments: Map<number, Comment>;
   private restrictedIPs: Map<string, { ip: string, reason: string, restrictedBy: number, restrictedAt: Date }>;
+  private auditLogs: Map<number, AuditLog>;
   sessionStore: SessionStore;
   userCurrentId: number;
   pasteCurrentId: number;
   commentCurrentId: number;
+  auditLogCurrentId: number;
 
   constructor() {
     this.users = new Map();
     this.pastes = new Map();
     this.comments = new Map();
     this.restrictedIPs = new Map();
+    this.auditLogs = new Map();
     this.userCurrentId = 1;
     this.pasteCurrentId = 1;
     this.commentCurrentId = 1;
+    this.auditLogCurrentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
     });
@@ -99,6 +112,17 @@ export class MemStorage implements IStorage {
       createdAt: insertUser.createdAt || new Date() 
     };
     this.users.set(id, user);
+
+    // Create audit log for user creation
+    this.createAuditLog({
+      action: AuditLogAction.USER_CREATED,
+      userId: id,
+      targetId: id,
+      targetType: "user",
+      details: JSON.stringify({ username: user.username }),
+      ipAddress: user.ipAddress,
+    });
+
     return user;
   }
 
@@ -110,12 +134,44 @@ export class MemStorage implements IStorage {
     const user = this.users.get(id);
     if (!user) return undefined;
 
+    const oldValues = { ...user };
     const updatedUser = { ...user, ...data };
     this.users.set(id, updatedUser);
+
+    // Create audit log for user update
+    this.createAuditLog({
+      action: AuditLogAction.USER_UPDATED,
+      userId: id, // Assuming the user is updating their own profile
+      targetId: id,
+      targetType: "user",
+      details: JSON.stringify({ 
+        oldValues,
+        newValues: data,
+        changes: Object.keys(data)
+      }),
+      ipAddress: user.ipAddress,
+    });
+
     return updatedUser;
   }
 
   async deleteUser(id: number): Promise<boolean> {
+    const user = this.users.get(id);
+    if (!user) return false;
+
+    // Store user data before deletion for audit log
+    const userData = { ...user };
+
+    // Create audit log for user deletion
+    this.createAuditLog({
+      action: AuditLogAction.USER_DELETED,
+      userId: 1, // Assuming admin is deleting, use 1 as placeholder
+      targetId: id,
+      targetType: "user",
+      details: JSON.stringify(userData),
+      ipAddress: null,
+    });
+
     return this.users.delete(id);
   }
 
@@ -138,6 +194,22 @@ export class MemStorage implements IStorage {
       createdAt: new Date() 
     };
     this.pastes.set(id, paste);
+
+    // Create audit log for paste creation
+    this.createAuditLog({
+      action: AuditLogAction.PASTE_CREATED,
+      userId: paste.userId,
+      targetId: id,
+      targetType: "paste",
+      details: JSON.stringify({ 
+        title: paste.title,
+        isPrivate: paste.isPrivate,
+        isAdminPaste: paste.isAdminPaste,
+        isPinned: paste.isPinned
+      }),
+      ipAddress: null,
+    });
+
     return paste;
   }
 
@@ -181,12 +253,44 @@ export class MemStorage implements IStorage {
     const paste = this.pastes.get(id);
     if (!paste) return undefined;
 
+    const oldValues = { ...paste };
     const updatedPaste = { ...paste, ...data };
     this.pastes.set(id, updatedPaste);
+
+    // Create audit log for paste update
+    this.createAuditLog({
+      action: AuditLogAction.PASTE_UPDATED,
+      userId: paste.userId, // Assuming the paste owner is updating
+      targetId: id,
+      targetType: "paste",
+      details: JSON.stringify({ 
+        oldValues,
+        newValues: data,
+        changes: Object.keys(data)
+      }),
+      ipAddress: null,
+    });
+
     return updatedPaste;
   }
 
   async deletePaste(id: number): Promise<boolean> {
+    const paste = this.pastes.get(id);
+    if (!paste) return false;
+
+    // Store paste data before deletion for audit log
+    const pasteData = { ...paste };
+
+    // Create audit log for paste deletion
+    this.createAuditLog({
+      action: AuditLogAction.PASTE_DELETED,
+      userId: paste.userId, // Assuming the paste owner is deleting
+      targetId: id,
+      targetType: "paste",
+      details: JSON.stringify(pasteData),
+      ipAddress: null,
+    });
+
     return this.pastes.delete(id);
   }
 
@@ -205,10 +309,40 @@ export class MemStorage implements IStorage {
       createdAt: new Date()
     };
     this.comments.set(id, comment);
+
+    // Create audit log for comment creation
+    this.createAuditLog({
+      action: AuditLogAction.COMMENT_CREATED,
+      userId: comment.userId,
+      targetId: id,
+      targetType: "comment",
+      details: JSON.stringify({ 
+        profileUserId: comment.profileUserId,
+        contentPreview: comment.content.substring(0, 50) + (comment.content.length > 50 ? '...' : '')
+      }),
+      ipAddress: null,
+    });
+
     return comment;
   }
 
   async deleteComment(id: number): Promise<boolean> {
+    const comment = this.comments.get(id);
+    if (!comment) return false;
+
+    // Store comment data before deletion for audit log
+    const commentData = { ...comment };
+
+    // Create audit log for comment deletion
+    this.createAuditLog({
+      action: AuditLogAction.COMMENT_DELETED,
+      userId: 1, // Assuming admin is deleting, use 1 as placeholder
+      targetId: id,
+      targetType: "comment",
+      details: JSON.stringify(commentData),
+      ipAddress: null,
+    });
+
     return this.comments.delete(id);
   }
 
@@ -220,9 +354,38 @@ export class MemStorage implements IStorage {
       restrictedBy,
       restrictedAt: new Date()
     });
+
+    // Create audit log for IP restriction
+    this.createAuditLog({
+      action: AuditLogAction.IP_RESTRICTED,
+      userId: restrictedBy,
+      targetId: null,
+      targetType: "ip",
+      details: JSON.stringify({ 
+        ip,
+        reason
+      }),
+      ipAddress: null,
+    });
   }
 
   async removeRestrictedIP(ip: string): Promise<boolean> {
+    const restrictedIP = this.restrictedIPs.get(ip);
+    if (!restrictedIP) return false;
+
+    // Create audit log for IP unrestriction
+    this.createAuditLog({
+      action: AuditLogAction.IP_UNRESTRICTED,
+      userId: 1, // Assuming admin is unrestricting, use 1 as placeholder
+      targetId: null,
+      targetType: "ip",
+      details: JSON.stringify({ 
+        ip,
+        originalRestriction: restrictedIP
+      }),
+      ipAddress: null,
+    });
+
     return this.restrictedIPs.delete(ip);
   }
 
@@ -232,6 +395,57 @@ export class MemStorage implements IStorage {
 
   async getAllRestrictedIPs(): Promise<Array<{ ip: string, reason: string, restrictedBy: number, restrictedAt: Date }>> {
     return Array.from(this.restrictedIPs.values());
+  }
+
+  // Audit log operations
+  async createAuditLog(log: InsertAuditLog): Promise<AuditLog> {
+    const id = this.auditLogCurrentId++;
+    const auditLog: AuditLog = {
+      ...log,
+      id,
+      createdAt: new Date(),
+    };
+    this.auditLogs.set(id, auditLog);
+    return auditLog;
+  }
+
+  async getAuditLogs(): Promise<AuditLog[]> {
+    return Array.from(this.auditLogs.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async getAuditLogsByUser(userId: number): Promise<AuditLog[]> {
+    return Array.from(this.auditLogs.values())
+      .filter(log => log.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getAuditLogsByAction(action: string): Promise<AuditLog[]> {
+    return Array.from(this.auditLogs.values())
+      .filter(log => log.action === action)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getDeletedUsers(): Promise<AuditLog[]> {
+    return Array.from(this.auditLogs.values())
+      .filter(log => log.action === AuditLogAction.USER_DELETED)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getDeletedPastes(): Promise<AuditLog[]> {
+    return Array.from(this.auditLogs.values())
+      .filter(log => log.action === AuditLogAction.PASTE_DELETED)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getEditLogs(): Promise<AuditLog[]> {
+    return Array.from(this.auditLogs.values())
+      .filter(log => 
+        log.action === AuditLogAction.USER_UPDATED || 
+        log.action === AuditLogAction.PASTE_UPDATED
+      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 }
 

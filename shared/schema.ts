@@ -12,6 +12,24 @@ export const UserRole = {
 // Create a type from the object values
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
+// Audit Log Action Types
+export const AuditLogAction = {
+  USER_CREATED: "user_created",
+  USER_DELETED: "user_deleted",
+  USER_UPDATED: "user_updated",
+  PASTE_CREATED: "paste_created",
+  PASTE_DELETED: "paste_deleted",
+  PASTE_UPDATED: "paste_updated",
+  COMMENT_CREATED: "comment_created",
+  COMMENT_DELETED: "comment_deleted",
+  IP_RESTRICTED: "ip_restricted",
+  IP_UNRESTRICTED: "ip_unrestricted",
+  ROLE_UPDATED: "role_updated",
+} as const;
+
+// Create a type from the object values
+export type AuditLogAction = (typeof AuditLogAction)[keyof typeof AuditLogAction];
+
 // User schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -79,6 +97,27 @@ export const insertCommentSchema = createInsertSchema(comments).pick({
   profileUserId: true,
 });
 
+// Audit Log schema
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  action: text("action").notNull(),
+  userId: integer("user_id").notNull(),
+  targetId: integer("target_id"),  // ID of the affected entity (user, paste, etc.)
+  targetType: text("target_type"),  // Type of the affected entity (user, paste, etc.)
+  details: text("details"),        // JSON string with additional details
+  ipAddress: text("ip_address"),    // IP address of the user who performed the action
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).pick({
+  action: true,
+  userId: true,
+  targetId: true,
+  targetType: true,
+  details: true,
+  ipAddress: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -88,3 +127,5 @@ export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type UpdateBio = z.infer<typeof updateBioSchema>;
 export type UpdateRole = z.infer<typeof updateRoleSchema>;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;

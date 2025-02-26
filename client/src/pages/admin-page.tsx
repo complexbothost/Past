@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { User, Paste, UserRole } from "@shared/schema";
+import { User, Paste, UserRole, AuditLog, AuditLogAction } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
-import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, Edit, User as UserIcon, Pin, PinOff, ShieldBan } from "lucide-react";
+import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, Edit, User as UserIcon, Pin, PinOff, ShieldBan, ClipboardList, Trash2, FilePen } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RoleUsername from "@/components/role-username";
@@ -33,6 +33,8 @@ export default function AdminPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [pasteToEdit, setPasteToEdit] = useState<Paste | null>(null);
   const [isAddIPDialogOpen, setIsAddIPDialogOpen] = useState(false);
+  const [selectedAuditLogType, setSelectedAuditLogType] = useState<string>("all");
+  const [selectedLogDetails, setSelectedLogDetails] = useState<string | null>(null);
 
   // Get all users
   const {
@@ -61,6 +63,46 @@ export default function AdminPage() {
     queryKey: ["/api/admin/ip-restrictions"],
   });
 
+  // Get all audit logs
+  const {
+    data: auditLogs,
+    isLoading: auditLogsLoading,
+    refetch: refetchAuditLogs
+  } = useQuery<AuditLog[]>({
+    queryKey: ["/api/admin/audit-logs"],
+    enabled: selectedAuditLogType === "all",
+  });
+
+  // Get deleted users logs
+  const {
+    data: deletedUsersLogs,
+    isLoading: deletedUsersLogsLoading,
+    refetch: refetchDeletedUsersLogs
+  } = useQuery<AuditLog[]>({
+    queryKey: ["/api/admin/audit-logs/deleted-users"],
+    enabled: selectedAuditLogType === "deleted-users",
+  });
+
+  // Get deleted pastes logs
+  const {
+    data: deletedPastesLogs,
+    isLoading: deletedPastesLogsLoading,
+    refetch: refetchDeletedPastesLogs
+  } = useQuery<AuditLog[]>({
+    queryKey: ["/api/admin/audit-logs/deleted-pastes"],
+    enabled: selectedAuditLogType === "deleted-pastes",
+  });
+
+  // Get edit logs
+  const {
+    data: editLogs,
+    isLoading: editLogsLoading,
+    refetch: refetchEditLogs
+  } = useQuery<AuditLog[]>({
+    queryKey: ["/api/admin/audit-logs/edits"],
+    enabled: selectedAuditLogType === "edits",
+  });
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -72,6 +114,8 @@ export default function AdminPage() {
         description: "The user has been successfully deleted",
       });
       refetchUsers();
+      refetchAuditLogs();
+      refetchDeletedUsersLogs();
     },
     onError: (error: Error) => {
       toast({
@@ -93,6 +137,7 @@ export default function AdminPage() {
         description: "The IP address has been successfully restricted",
       });
       refetchRestrictedIPs();
+      refetchAuditLogs();
       setIsAddIPDialogOpen(false);
     },
     onError: (error: Error) => {
@@ -115,6 +160,7 @@ export default function AdminPage() {
         description: "The IP restriction has been successfully removed",
       });
       refetchRestrictedIPs();
+      refetchAuditLogs();
     },
     onError: (error: Error) => {
       toast({
@@ -137,6 +183,8 @@ export default function AdminPage() {
         description: "The paste has been successfully updated",
       });
       refetchPastes();
+      refetchAuditLogs();
+      refetchEditLogs();
       queryClient.invalidateQueries({ queryKey: ["/api/pastes/clown"] });
       setIsEditDialogOpen(false);
     },
@@ -160,6 +208,8 @@ export default function AdminPage() {
         description: "The paste has been successfully deleted",
       });
       refetchPastes();
+      refetchAuditLogs();
+      refetchDeletedPastesLogs();
       queryClient.invalidateQueries({ queryKey: ["/api/pastes/clown"] });
     },
     onError: (error: Error) => {
@@ -258,7 +308,7 @@ export default function AdminPage() {
   };
 
   const formatDate = (date: Date | string) => {
-    return format(new Date(date), "MMM d, yyyy");
+    return format(new Date(date), "MMM d, yyyy HH:mm:ss");
   };
 
   const handleDeleteUser = (userId: number) => {
@@ -321,6 +371,42 @@ export default function AdminPage() {
     navigate(`/user/${userId}`);
   };
 
+  const getActionBadgeColor = (action: string) => {
+    switch (action) {
+      case AuditLogAction.USER_CREATED:
+      case AuditLogAction.PASTE_CREATED:
+      case AuditLogAction.COMMENT_CREATED:
+        return "bg-green-800 text-white";
+      case AuditLogAction.USER_DELETED:
+      case AuditLogAction.PASTE_DELETED:
+      case AuditLogAction.COMMENT_DELETED:
+        return "bg-red-800 text-white";
+      case AuditLogAction.USER_UPDATED:
+      case AuditLogAction.PASTE_UPDATED:
+      case AuditLogAction.ROLE_UPDATED:
+        return "bg-blue-800 text-white";
+      case AuditLogAction.IP_RESTRICTED:
+        return "bg-purple-800 text-white";
+      case AuditLogAction.IP_UNRESTRICTED:
+        return "bg-orange-800 text-white";
+      default:
+        return "bg-zinc-800 text-white";
+    }
+  };
+
+  const formatActionName = (action: string) => {
+    return action.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const prettifyJson = (jsonString: string) => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      return JSON.stringify(parsed, null, 2);
+    } catch (e) {
+      return jsonString;
+    }
+  };
+
   if (!user?.isAdmin) {
     return (
       <PageLayout>
@@ -348,7 +434,7 @@ export default function AdminPage() {
         </div>
 
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-8">
+          <TabsList className="grid grid-cols-4 mb-8">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users
@@ -360,6 +446,10 @@ export default function AdminPage() {
             <TabsTrigger value="ip-restrictions" className="flex items-center gap-2">
               <ShieldBan className="h-4 w-4" />
               IP Restrictions
+            </TabsTrigger>
+            <TabsTrigger value="audit-logs" className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Audit Logs
             </TabsTrigger>
           </TabsList>
 
@@ -411,6 +501,8 @@ export default function AdminPage() {
                                     role: value === "none" ? null : value
                                   }).then(() => {
                                     refetchUsers();
+                                    refetchAuditLogs();
+                                    refetchEditLogs();
                                     toast({
                                       title: "Role updated",
                                       description: `Updated role for ${u.username}`,
@@ -655,7 +747,7 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
-          {/* New IP Restrictions Tab */}
+          {/* IP Restrictions Tab */}
           <TabsContent value="ip-restrictions" className="pt-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -801,20 +893,172 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* New Audit Logs Tab */}
+          <TabsContent value="audit-logs" className="pt-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Audit Logs</CardTitle>
+                <CardDescription>
+                  View system activity logs including deleted content and edit history
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <Button 
+                    variant={selectedAuditLogType === "all" ? "default" : "outline"}
+                    onClick={() => setSelectedAuditLogType("all")}
+                    className="flex items-center gap-2"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    All Logs
+                  </Button>
+                  <Button 
+                    variant={selectedAuditLogType === "deleted-users" ? "default" : "outline"}
+                    onClick={() => setSelectedAuditLogType("deleted-users")}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Deleted Users
+                  </Button>
+                  <Button 
+                    variant={selectedAuditLogType === "deleted-pastes" ? "default" : "outline"}
+                    onClick={() => setSelectedAuditLogType("deleted-pastes")}
+                    className="flex items-center gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Deleted Pastes
+                  </Button>
+                  <Button 
+                    variant={selectedAuditLogType === "edits" ? "default" : "outline"}
+                    onClick={() => setSelectedAuditLogType("edits")}
+                    className="flex items-center gap-2"
+                  >
+                    <FilePen className="h-4 w-4" />
+                    Edit Logs
+                  </Button>
+                </div>
+
+                {/* Log details dialog */}
+                <Dialog open={!!selectedLogDetails} onOpenChange={(open) => !open && setSelectedLogDetails(null)}>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Log Details</DialogTitle>
+                    </DialogHeader>
+                    <div className="bg-zinc-900 p-4 rounded-md border border-zinc-800 mt-2 max-h-[500px] overflow-y-auto">
+                      <pre className="text-sm whitespace-pre-wrap break-words text-white">
+                        {selectedLogDetails && prettifyJson(selectedLogDetails)}
+                      </pre>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Conditional rendering based on selected log type */}
+                {(selectedAuditLogType === "all" && auditLogsLoading) ||
+                (selectedAuditLogType === "deleted-users" && deletedUsersLogsLoading) ||
+                (selectedAuditLogType === "deleted-pastes" && deletedPastesLogsLoading) ||
+                (selectedAuditLogType === "edits" && editLogsLoading) ? (
+                  <div className="flex justify-center py-12">
+                    <div className="h-8 w-8 text-primary">Loading...</div>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Action</TableHead>
+                          <TableHead>User ID</TableHead>
+                          <TableHead>Target</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Details</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(() => {
+                          let logs: AuditLog[] = [];
+
+                          switch (selectedAuditLogType) {
+                            case "all":
+                              logs = auditLogs || [];
+                              break;
+                            case "deleted-users":
+                              logs = deletedUsersLogs || [];
+                              break;
+                            case "deleted-pastes":
+                              logs = deletedPastesLogs || [];
+                              break;
+                            case "edits":
+                              logs = editLogs || [];
+                              break;
+                            default:
+                              logs = [];
+                          }
+
+                          if (logs.length === 0) {
+                            return (
+                              <TableRow>
+                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                  No logs found for the selected filter.
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
+
+                          return logs.map((log) => (
+                            <TableRow key={log.id}>
+                              <TableCell>{log.id}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={getActionBadgeColor(log.action)}>
+                                  {formatActionName(log.action)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="link"
+                                  className="p-0 h-auto"
+                                  onClick={() => navigateToUserProfile(log.userId)}
+                                >
+                                  User #{log.userId}
+                                </Button>
+                              </TableCell>
+                              <TableCell>
+                                {log.targetType && (
+                                  <span className="capitalize">{log.targetType} #{log.targetId}</span>
+                                )}
+                              </TableCell>
+                              <TableCell>{formatDate(log.createdAt)}</TableCell>
+                              <TableCell>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setSelectedLogDetails(log.details || '')}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ));
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
         {/* Edit Paste Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Paste</DialogTitle>
               <DialogDescription>
-                Make changes to the paste content
+                Make changes to the paste properties
               </DialogDescription>
             </DialogHeader>
-
             <Form {...editPasteForm}>
-              <form onSubmit={editPasteForm.handleSubmit(onSubmitEditForm)} className="space-y-4">
+              <form onSubmit={editPasteForm.handleSubmit(onSubmitEditForm)} className="space-y-4 pt-2">
                 <FormField
                   control={editPasteForm.control}
                   name="title"
@@ -828,7 +1072,6 @@ export default function AdminPage() {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={editPasteForm.control}
                   name="content"
@@ -837,8 +1080,8 @@ export default function AdminPage() {
                       <FormLabel>Content</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Paste content..."
-                          className="min-h-[200px]"
+                          placeholder="Paste content"
+                          className="h-40"
                           {...field}
                         />
                       </FormControl>
@@ -846,8 +1089,7 @@ export default function AdminPage() {
                     </FormItem>
                   )}
                 />
-
-                <div className="flex gap-4 flex-wrap">
+                <div className="flex flex-wrap gap-4">
                   <FormField
                     control={editPasteForm.control}
                     name="isPrivate"
@@ -859,11 +1101,10 @@ export default function AdminPage() {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel>Private</FormLabel>
+                        <FormLabel className="cursor-pointer">Private</FormLabel>
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={editPasteForm.control}
                     name="isClown"
@@ -875,11 +1116,10 @@ export default function AdminPage() {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel>Mark as Clown</FormLabel>
+                        <FormLabel className="cursor-pointer">Clown</FormLabel>
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={editPasteForm.control}
                     name="isAdminPaste"
@@ -891,11 +1131,10 @@ export default function AdminPage() {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel>Admin Paste</FormLabel>
+                        <FormLabel className="cursor-pointer">Admin Paste</FormLabel>
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={editPasteForm.control}
                     name="isPinned"
@@ -907,30 +1146,29 @@ export default function AdminPage() {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel>Pin for 24h</FormLabel>
+                        <FormLabel className="cursor-pointer">Pinned (24h)</FormLabel>
                       </FormItem>
                     )}
                   />
                 </div>
-
-                <FormField
-                  control={editPasteForm.control}
-                  name="extraDetails"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Admin Extra Details</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Extra details for admin paste..."
-                          className="min-h-[100px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+                {editPasteForm.watch("isAdminPaste") && (
+                  <FormField
+                    control={editPasteForm.control}
+                    name="extraDetails"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Extra Details (Admin Only)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Additional details for admin paste..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <div className="flex justify-end gap-2 pt-4">
                   <Button
                     type="button"
@@ -939,10 +1177,7 @@ export default function AdminPage() {
                   >
                     Cancel
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={updatePasteMutation.isPending}
-                  >
+                  <Button type="submit" disabled={updatePasteMutation.isPending}>
                     {updatePasteMutation.isPending ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
