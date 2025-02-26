@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileText, LogOut, Shield, Plus, Users, Code, User, Menu, FileTerminal } from "lucide-react";
+import { FileText, LogOut, Shield, Plus, Users, Code, User, Menu, FileTerminal, ShoppingBag } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import PasteForm from "@/components/paste-form";
@@ -53,6 +53,12 @@ export default function Header() {
         <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10">
           <Users className="h-4 w-4 mr-2" />
           Users
+        </Button>
+      </Link>
+      <Link href="/shop">
+        <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10">
+          <ShoppingBag className="h-4 w-4 mr-2" />
+          Shop
         </Button>
       </Link>
       <Link href="/tos">
@@ -154,6 +160,10 @@ export default function Header() {
               <DropdownMenuItem onClick={() => navigate("/")} className="text-white/70 hover:text-white focus:text-white">
                 <FileText className="mr-2 h-4 w-4" />
                 <span>My Pastes</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/shop")} className="text-white/70 hover:text-white focus:text-white">
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                <span>Shop</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setCreateDialogOpen(true)} className="md:hidden text-white/70 hover:text-white focus:text-white">
                 <Plus className="mr-2 h-4 w-4" />
