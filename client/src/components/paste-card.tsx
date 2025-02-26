@@ -1,5 +1,4 @@
 import { Paste } from "@shared/schema";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
@@ -53,68 +52,73 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
   };
 
   return (
-    <Card className={`h-full flex flex-col border-zinc-800 ${
-      isClown ? 'bg-zinc-900' : 
-      (paste.isPrivate && showPrivateBadge) ? 'bg-zinc-900' : ''
+    <div className={`py-3 px-4 hover:bg-zinc-800/50 rounded-lg transition-colors ${
+      isClown ? 'bg-zinc-900/50' : 
+      (paste.isPrivate && showPrivateBadge) ? 'bg-zinc-900/50' : ''
     }`}>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-lg font-bold">{paste.title}</CardTitle>
-          {(paste.isPrivate && showPrivateBadge) && (
-            <Badge variant="outline" className="bg-zinc-800 text-white flex items-center gap-1">
-              <Lock className="h-3 w-3" /> Private
-            </Badge>
-          )}
-          {isClown && (
-            <Badge variant="secondary" className="bg-zinc-800 text-white">
-              Clown
-            </Badge>
-          )}
+      <div className="flex justify-between items-start gap-4 mb-2">
+        <div>
+          <h3 
+            className="text-lg font-medium hover:text-primary cursor-pointer transition-colors"
+            onClick={() => navigate(`/paste/${paste.id}`)}
+          >
+            {paste.title}
+          </h3>
+          <div className="flex items-center gap-2 text-xs text-zinc-400">
+            <Calendar className="h-3 w-3" />
+            <span>{formatDate(paste.createdAt)}</span>
+            {(paste.isPrivate && showPrivateBadge) && (
+              <Badge variant="outline" className="bg-zinc-800 text-white flex items-center gap-1">
+                <Lock className="h-3 w-3" /> Private
+              </Badge>
+            )}
+            {isClown && (
+              <Badge variant="secondary" className="bg-zinc-800 text-white">
+                Clown
+              </Badge>
+            )}
+          </div>
         </div>
-        <CardDescription className="flex items-center gap-1 text-xs">
-          <Calendar className="h-3 w-3" />
-          {formatDate(paste.createdAt)}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        <div className="bg-zinc-900 p-3 rounded-md border border-zinc-800 h-28 overflow-hidden">
-          <pre className="text-xs whitespace-pre-wrap text-white">
-            {truncateContent(paste.content)}
-          </pre>
-        </div>
-      </CardContent>
-      <CardFooter className="pt-0 flex justify-between">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs"
-          onClick={() => navigate(`/paste/${paste.id}`)}
-        >
-          <ExternalLink className="h-3 w-3 mr-1" /> View Full
-        </Button>
 
-        {canDelete && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-xs text-white">
-                <Trash className="h-3 w-3 mr-1" /> Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the paste.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </CardFooter>
-    </Card>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs"
+            onClick={() => navigate(`/paste/${paste.id}`)}
+          >
+            <ExternalLink className="h-3 w-3" />
+          </Button>
+
+          {canDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-xs text-white">
+                  <Trash className="h-3 w-3" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the paste.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-zinc-900 p-3 rounded-md border border-zinc-800">
+        <pre className="text-xs whitespace-pre-wrap text-white">
+          {truncateContent(paste.content)}
+        </pre>
+      </div>
+    </div>
   );
 }

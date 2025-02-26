@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { useLocation } from "wouter";
 import PageLayout from "@/components/layout/page-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 
@@ -33,35 +32,31 @@ export default function UsersPage() {
             <div className="h-8 w-8 text-primary">Loading...</div>
           </div>
         ) : users && users.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
             {users.map((user) => (
-              <Card key={user.id} className="border-zinc-800">
-                <CardHeader className="pb-4">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-zinc-800 text-white">
-                        {user.username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-1">
-                      <CardTitle 
-                        className="text-lg hover:text-primary cursor-pointer transition-colors"
-                        onClick={() => navigate(`/user/${user.id}`)}
-                      >
-                        {user.username}
-                      </CardTitle>
-                      <div className="text-sm text-zinc-400">
-                        ID: {user.id} • Joined {formatDate(user.createdAt)}
-                        {user.isAdmin && (
-                          <span className="ml-2 bg-zinc-800 text-white text-xs px-2 py-0.5 rounded">
-                            Admin
-                          </span>
-                        )}
-                      </div>
-                    </div>
+              <div key={user.id} className="flex items-center gap-4 py-2 hover:bg-zinc-800/50 px-4 rounded-lg transition-colors">
+                <Avatar className="h-10 w-10">
+                  <AvatarFallback className="bg-zinc-800 text-white">
+                    {user.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 
+                    className="text-lg font-medium hover:text-primary cursor-pointer transition-colors"
+                    onClick={() => navigate(`/user/${user.id}`)}
+                  >
+                    {user.username}
+                  </h3>
+                  <div className="text-sm text-zinc-400">
+                    ID: {user.id} • Joined {formatDate(user.createdAt)}
+                    {user.isAdmin && (
+                      <span className="ml-2 bg-zinc-800 text-white text-xs px-2 py-0.5 rounded">
+                        Admin
+                      </span>
+                    )}
                   </div>
-                </CardHeader>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
