@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { Paste } from "@shared/schema";
+import { Paste, User } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -8,9 +8,10 @@ import PageLayout from "@/components/layout/page-layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Eye, Lock, Trash } from "lucide-react";
+import { ArrowLeft, Calendar, Eye, Lock, Trash, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import RoleUsername from "@/components/role-username";
 
 export default function PastePage() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +26,15 @@ export default function PastePage() {
     refetch
   } = useQuery<Paste>({
     queryKey: [`/api/pastes/${id}`],
+  });
+
+  // Get paste author
+  const {
+    data: pasteAuthor,
+    isLoading: authorLoading
+  } = useQuery<User>({
+    queryKey: [paste ? `/api/users/${paste.userId}` : null],
+    enabled: !!paste
   });
 
   const handleDeletePaste = async () => {
@@ -93,11 +103,22 @@ export default function PastePage() {
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-2xl font-bold mb-2">{paste.title}</CardTitle>
-                <CardDescription className="flex items-center gap-4">
+                <CardDescription className="flex flex-wrap items-center gap-4">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     {formatDate(paste.createdAt)}
                   </span>
+                  {pasteAuthor ? (
+                    <span className="flex items-center gap-1">
+                      <UserIcon className="h-4 w-4 text-muted-foreground" />
+                      <RoleUsername user={pasteAuthor} />
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <UserIcon className="h-4 w-4 text-muted-foreground" />
+                      User #{paste.userId}
+                    </span>
+                  )}
                   {paste.isPrivate && (
                     <span className="flex items-center gap-1 text-white">
                       <Lock className="h-4 w-4" />

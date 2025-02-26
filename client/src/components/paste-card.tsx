@@ -1,13 +1,15 @@
-import { Paste } from "@shared/schema";
+import { Paste, User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Calendar, Lock, ExternalLink, Trash } from "lucide-react";
+import { Calendar, Lock, ExternalLink, Trash, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
+import RoleUsername from "@/components/role-username";
 
 interface PasteCardProps {
   paste: Paste;
@@ -20,6 +22,17 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
   const [_, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Fetch the author information
+  const { data: author } = useQuery<User>({
+    queryKey: [`/api/users/${paste.userId}`],
+    // Only fetch if we're rendering the component (optimization)
+    enabled: true,
+    // Don't refetch on window focus for this data
+    refetchOnWindowFocus: false,
+    // Cache for longer as user data doesn't change often
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const canDelete = user && (user.id === paste.userId || user.isAdmin);
 
@@ -62,7 +75,14 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
           <Calendar className="h-3 w-3" />
           <span>{formatDate(paste.createdAt)}</span>
           <span>•</span>
-          <span>User #{paste.userId}</span>
+          {author ? (
+            <span className="flex items-center gap-1">
+              <UserIcon className="h-3 w-3" />
+              <RoleUsername user={author} />
+            </span>
+          ) : (
+            <span>User #{paste.userId}</span>
+          )}
           {(paste.isPrivate && showPrivateBadge) && (
             <Badge variant="outline" className="bg-zinc-800 text-white flex items-center gap-1">
               <Lock className="h-3 w-3" /> Private

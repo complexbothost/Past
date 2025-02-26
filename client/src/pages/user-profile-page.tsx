@@ -18,6 +18,7 @@ import { z } from "zod";
 import PasteCard from "@/components/paste-card";
 import { Calendar, User as UserIcon, Pencil, Camera } from "lucide-react";
 import { format } from "date-fns";
+import RoleUsername from "@/components/role-username";
 
 const commentFormSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment must be 1000 characters or less"),
@@ -237,7 +238,7 @@ export default function UserProfilePage() {
                   </div>
                 </div>
                 <CardTitle className="text-2xl font-bold text-center">
-                  {profileUser.username}
+                  <RoleUsername user={profileUser} />
                 </CardTitle>
                 <CardDescription className="text-center">
                   {profileUser.isAdmin && (
