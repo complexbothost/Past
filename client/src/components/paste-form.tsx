@@ -12,16 +12,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
+import { useLocation } from "wouter"; // Import useLocation for navigation
 
 interface PasteFormProps {
   onSuccess?: () => void;
+  skipRedirect?: boolean; // New prop to optionally skip redirect
 }
 
 type FormValues = z.infer<typeof insertPasteSchema>;
 
-export default function PasteForm({ onSuccess }: PasteFormProps) {
+export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
   const { user } = useAuth();
   const isAdmin = user?.isAdmin;
+  const [_, navigate] = useLocation(); // Get the navigate function for redirection
 
   const form = useForm<FormValues>({
     resolver: zodResolver(insertPasteSchema),
@@ -43,12 +46,21 @@ export default function PasteForm({ onSuccess }: PasteFormProps) {
       const res = await apiRequest("POST", "/api/pastes", pasteData);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Reset the form
       form.reset();
+
+      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/pastes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/pastes"] });
+
+      // If onSuccess callback is provided, call it (for dialog-based scenarios)
       if (onSuccess) {
         onSuccess();
+      } 
+      // If skipRedirect is not true, navigate to the newly created paste
+      else if (!skipRedirect) {
+        navigate(`/paste/${data.id}`);
       }
     },
   });
