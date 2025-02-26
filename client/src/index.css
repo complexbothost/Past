@@ -33,3 +33,35 @@
     }
   }
 }
+
+/* Role-specific styles */
+.role-rich {
+  @apply text-yellow-300 relative;
+}
+
+.role-rich::before,
+.role-rich::after {
+  content: '✨';
+  @apply absolute top-0;
+}
+
+.role-rich::before {
+  @apply -left-4;
+}
+
+.role-rich::after {
+  @apply -right-4;
+}
+
+.role-fraud {
+  @apply text-blue-400;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.role-gang {
+  @apply text-purple-400;
+}
+
+.role-gang.glitch-active {
+  animation: glitch 0.1s ease-in-out;
+}

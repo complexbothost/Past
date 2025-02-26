@@ -39,10 +39,8 @@ export default function RoleUsername({ user, className, onClick }: RoleUsernameP
         <span 
           className={cn(
             "cursor-pointer relative",
-            "text-yellow-300",
+            "role-rich",
             "animate-pulse",
-            "after:content-['✨'] after:absolute after:-right-4 after:top-0",
-            "before:content-['✨'] before:absolute before:-left-4 before:top-0",
             className
           )}
           onClick={onClick}
@@ -56,9 +54,8 @@ export default function RoleUsername({ user, className, onClick }: RoleUsernameP
         <span 
           className={cn(
             "cursor-pointer",
-            "text-blue-400",
+            "role-fraud",
             "animate-pulse",
-            "drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]",
             className
           )}
           onClick={onClick}
@@ -72,16 +69,11 @@ export default function RoleUsername({ user, className, onClick }: RoleUsernameP
         <span 
           className={cn(
             "cursor-pointer",
-            "text-purple-400",
-            glitchActive && "animate-[glitch_0.1s_ease-in-out]",
+            "role-gang",
+            glitchActive && "glitch-active",
             className
           )}
           onClick={onClick}
-          style={{
-            textShadow: glitchActive 
-              ? "2px 2px #ff00ea, -2px -2px #00ff9d" 
-              : "none"
-          }}
         >
           {user.username}
         </span>

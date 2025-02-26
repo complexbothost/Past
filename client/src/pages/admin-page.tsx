@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -34,8 +34,8 @@ export default function AdminPage() {
   const [pasteToEdit, setPasteToEdit] = useState<Paste | null>(null);
 
   // Get all users
-  const { 
-    data: users, 
+  const {
+    data: users,
     isLoading: usersLoading,
     refetch: refetchUsers
   } = useQuery<User[]>({
@@ -43,8 +43,8 @@ export default function AdminPage() {
   });
 
   // Get all public pastes
-  const { 
-    data: pastes, 
+  const {
+    data: pastes,
     isLoading: pastesLoading,
     refetch: refetchPastes
   } = useQuery<Paste[]>({
@@ -251,9 +251,9 @@ export default function AdminPage() {
                           <TableRow key={u.id}>
                             <TableCell>{u.id}</TableCell>
                             <TableCell className="font-medium">
-                              <Button 
-                                variant="link" 
-                                className="p-0 h-auto font-medium" 
+                              <Button
+                                variant="link"
+                                className="p-0 h-auto font-medium"
                                 onClick={() => navigateToUserProfile(u.id)}
                               >
                                 <RoleUsername user={u} />
@@ -262,10 +262,10 @@ export default function AdminPage() {
                             <TableCell>{u.ipAddress || 'Unknown'}</TableCell>
                             <TableCell>
                               <Select
-                                value={u.role || ""}
+                                value={u.role || "none"}
                                 onValueChange={(value) => {
                                   apiRequest("PATCH", `/api/admin/users/${u.id}/role`, {
-                                    role: value || null
+                                    role: value === "none" ? null : value
                                   }).then(() => {
                                     refetchUsers();
                                     toast({
@@ -285,7 +285,7 @@ export default function AdminPage() {
                                   <SelectValue placeholder="Select role" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">No Role</SelectItem>
+                                  <SelectItem value="none">No Role</SelectItem>
                                   <SelectItem value={UserRole.RICH}>Rich</SelectItem>
                                   <SelectItem value={UserRole.FRAUD}>Fraud</SelectItem>
                                   <SelectItem value={UserRole.GANG}>Gang</SelectItem>
@@ -295,8 +295,8 @@ export default function AdminPage() {
                             <TableCell>{formatDate(u.createdAt)}</TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
-                                <Button 
-                                  variant="outline" 
+                                <Button
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => navigateToUserProfile(u.id)}
                                 >
@@ -375,9 +375,9 @@ export default function AdminPage() {
                             <TableCell>{p.id}</TableCell>
                             <TableCell className="font-medium">{p.title}</TableCell>
                             <TableCell>
-                              <Button 
-                                variant="link" 
-                                className="p-0 h-auto" 
+                              <Button
+                                variant="link"
+                                className="p-0 h-auto"
                                 onClick={() => navigateToUserProfile(p.userId)}
                               >
                                 {p.userId}
@@ -396,7 +396,7 @@ export default function AdminPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <Switch 
+                                <Switch
                                   checked={p.isClown}
                                   onCheckedChange={() => handleMarkAsClown(p)}
                                 />
@@ -518,10 +518,10 @@ export default function AdminPage() {
                     <FormItem>
                       <FormLabel>Content</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Paste content..." 
+                        <Textarea
+                          placeholder="Paste content..."
                           className="min-h-[200px]"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -536,7 +536,7 @@ export default function AdminPage() {
                     render={({ field }) => (
                       <FormItem className="flex items-center gap-2 space-y-0">
                         <FormControl>
-                          <Switch 
+                          <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
@@ -552,7 +552,7 @@ export default function AdminPage() {
                     render={({ field }) => (
                       <FormItem className="flex items-center gap-2 space-y-0">
                         <FormControl>
-                          <Switch 
+                          <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
                           />
@@ -564,15 +564,15 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant="outline"
                     onClick={() => setIsEditDialogOpen(false)}
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={updatePasteMutation.isPending}
                   >
                     {updatePasteMutation.isPending ? "Saving..." : "Save Changes"}
