@@ -70,6 +70,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
+  // Search pastes by title
+  app.get("/api/pastes/search", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+
+      if (!query) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+
+      const pastes = await storage.searchPastesByTitle(query);
+      res.json(pastes);
+    } catch (err) {
+      res.status(500).json({ message: "Error searching pastes" });
+    }
+  });
+
   // Paste routes
   app.get("/api/pastes", async (req, res) => {
     try {

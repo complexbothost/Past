@@ -24,6 +24,7 @@ export interface IStorage {
   getClownPastes(): Promise<Paste[]>;
   updatePaste(id: number, data: Partial<Paste>): Promise<Paste | undefined>;
   deletePaste(id: number): Promise<boolean>;
+  searchPastesByTitle(query: string): Promise<Paste[]>; // New method for searching pastes
 
   // Comment operations
   getProfileComments(profileUserId: number): Promise<Comment[]>;
@@ -122,6 +123,10 @@ export class MemStorage implements IStorage {
       id, 
       isPrivate: insertPaste.isPrivate || false,
       isClown: false,
+      isAdminPaste: insertPaste.isAdminPaste || false,
+      isPinned: insertPaste.isPinned || null,
+      pinnedUntil: insertPaste.pinnedUntil || null,
+      extraDetails: insertPaste.extraDetails || null,
       createdAt: new Date() 
     };
     this.pastes.set(id, paste);
@@ -143,6 +148,24 @@ export class MemStorage implements IStorage {
   async getClownPastes(): Promise<Paste[]> {
     return Array.from(this.pastes.values()).filter(
       (paste) => paste.isClown
+    );
+  }
+
+  // New method to search pastes by title
+  async searchPastesByTitle(query: string): Promise<Paste[]> {
+    // Get all pastes - we'll filter them based on query and visibility
+    const allPastes = Array.from(this.pastes.values());
+
+    // If query is empty, return an empty array
+    if (!query.trim()) {
+      return [];
+    }
+
+    // Filter pastes that have a title matching the query (case-insensitive)
+    // Only include public pastes in search results
+    return allPastes.filter(paste => 
+      paste.title.toLowerCase().includes(query.toLowerCase()) && 
+      !paste.isPrivate
     );
   }
 
