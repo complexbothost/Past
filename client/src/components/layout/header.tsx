@@ -9,13 +9,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { FileText, LogOut, Shield, Plus, Users } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FileText, LogOut, Shield, Plus, Users, Code, User, Menu } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import PasteForm from "@/components/paste-form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function Header() {
   const [_, navigate] = useLocation();
@@ -39,32 +40,72 @@ export default function Header() {
 
   if (!user) return null;
 
+  const NavLinks = () => (
+    <>
+      <Link href="/">
+        <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10">
+          <FileText className="h-4 w-4 mr-2" />
+          Pastes
+        </Button>
+      </Link>
+      <Link href="/users">
+        <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10">
+          <Users className="h-4 w-4 mr-2" />
+          Users
+        </Button>
+      </Link>
+    </>
+  );
+
   return (
-    <header className="bg-zinc-900 border-b border-zinc-800">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+    <header className="sticky top-0 z-40 border-b border-white/5 bg-zinc-900/80 backdrop-blur-lg">
+      <div className="container max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-xl font-bold text-white">
-            DoxNightmare
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-700">
+              <Code className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-white to-white/70 text-transparent bg-clip-text">
+              DoxNightmare
+            </span>
           </Link>
 
-          {/* Added Users link */}
-          <Link href="/users" className="text-sm text-zinc-400 hover:text-white transition-colors">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <Users className="h-4 w-4" />
-              Users
-            </Button>
-          </Link>
+          <div className="hidden md:flex space-x-1">
+            <NavLinks />
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Mobile menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="bg-zinc-900 border-white/5">
+              <div className="flex flex-col space-y-4 mt-8">
+                <NavLinks />
+                <Button 
+                  variant="default" 
+                  className="w-full gap-2" 
+                  onClick={() => setCreateDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  New Paste
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="gap-2 hidden sm:flex">
+              <Button size="sm" className="gap-2 hidden md:flex bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-0">
                 <Plus className="h-4 w-4" />
                 New Paste
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px]">
+            <DialogContent className="sm:max-w-[550px] bg-zinc-900 border-white/10">
               <DialogHeader>
                 <DialogTitle>Create New Paste</DialogTitle>
               </DialogHeader>
@@ -74,36 +115,48 @@ export default function Header() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-zinc-800 text-white">
-                    {user.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
+              <Button variant="ghost" size="sm" className="relative h-8 w-8 rounded-full overflow-hidden">
+                <Avatar className="h-8 w-8 border border-white/10">
+                  {user.avatarUrl ? (
+                    <AvatarImage src={user.avatarUrl} alt={user.username} />
+                  ) : (
+                    <AvatarFallback className="bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-white">
+                      {user.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
-                {user.username}
+            <DropdownMenuContent className="w-56 bg-zinc-900 border-white/10" align="end">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none text-white">{user.username}</p>
+                  <p className="text-xs leading-none text-white/50">
+                    {user.isAdmin ? 'Administrator' : 'Member'}
+                  </p>
+                </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/")}>
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem onClick={() => navigate(`/user/${user.id}`)} className="text-white/70 hover:text-white focus:text-white">
+                <User className="mr-2 h-4 w-4" />
+                <span>My Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/")} className="text-white/70 hover:text-white focus:text-white">
                 <FileText className="mr-2 h-4 w-4" />
                 <span>My Pastes</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setCreateDialogOpen(true)} className="sm:hidden">
+              <DropdownMenuItem onClick={() => setCreateDialogOpen(true)} className="md:hidden text-white/70 hover:text-white focus:text-white">
                 <Plus className="mr-2 h-4 w-4" />
                 <span>New Paste</span>
               </DropdownMenuItem>
               {user.isAdmin && (
-                <DropdownMenuItem onClick={() => navigate("/admin")}>
+                <DropdownMenuItem onClick={() => navigate("/admin")} className="text-white/70 hover:text-white focus:text-white">
                   <Shield className="mr-2 h-4 w-4" />
                   <span>Admin Panel</span>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuSeparator className="bg-white/10" />
+              <DropdownMenuItem onClick={handleLogout} className="text-white/70 hover:text-white focus:text-white">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

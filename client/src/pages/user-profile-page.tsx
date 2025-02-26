@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import PageLayout from "@/components/layout/page-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,9 +16,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import PasteCard from "@/components/paste-card";
-import { Calendar, User as UserIcon, Pencil, Camera } from "lucide-react";
+import { Calendar, User as UserIcon, Pencil, Camera, ChevronLeft, MessageSquare, Shield, FileText } from "lucide-react";
 import { format } from "date-fns";
 import RoleUsername from "@/components/role-username";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 
 const commentFormSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment must be 1000 characters or less"),
@@ -169,8 +171,12 @@ export default function UserProfilePage() {
   if (isUserLoading) {
     return (
       <PageLayout>
-        <div className="container mx-auto py-16 flex justify-center">
-          <div className="h-8 w-8 text-primary">Loading...</div>
+        <div className="container max-w-7xl mx-auto py-16 flex justify-center">
+          <div className="flex flex-col items-center">
+            <div className="w-24 h-24 rounded-full bg-zinc-800/50 animate-pulse"></div>
+            <div className="h-8 w-48 bg-zinc-800/50 rounded mt-4 animate-pulse"></div>
+            <div className="h-4 w-24 bg-zinc-800/50 rounded mt-2 animate-pulse"></div>
+          </div>
         </div>
       </PageLayout>
     );
@@ -179,13 +185,17 @@ export default function UserProfilePage() {
   if (userError || !profileUser) {
     return (
       <PageLayout>
-        <div className="container mx-auto py-8">
-          <Button variant="outline" className="mb-6" onClick={() => navigate("/")}>
-            <UserIcon className="mr-2 h-4 w-4" /> Back
+        <div className="container max-w-7xl mx-auto py-8 px-4">
+          <Button 
+            variant="outline" 
+            className="mb-6 border-white/10 text-white/70 hover:bg-white/5" 
+            onClick={() => navigate("/")}
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Card>
+          <Card className="border-white/10 bg-zinc-900/50 backdrop-blur-md">
             <CardContent className="pt-6">
-              <div className="text-center py-8 text-destructive">
+              <div className="text-center py-8 text-red-400">
                 {userError ? "Error loading user profile" : "User not found"}
               </div>
             </CardContent>
@@ -199,23 +209,28 @@ export default function UserProfilePage() {
 
   return (
     <PageLayout>
-      <div className="container mx-auto py-8 px-4">
-        <Button variant="outline" className="mb-6" onClick={() => navigate("/")}>
-          <UserIcon className="mr-2 h-4 w-4" /> Back
+      <div className="container max-w-7xl mx-auto py-8 px-4">
+        <Button 
+          variant="outline" 
+          className="mb-6 border-white/10 text-white/70 hover:bg-white/5" 
+          onClick={() => navigate("/")}
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" /> Back
         </Button>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* User Profile Card */}
-          <div className="md:col-span-1">
-            <Card className="border-zinc-800">
-              <CardHeader className="pb-2">
-                <div className="flex justify-center mb-4">
+          <div className="lg:col-span-1">
+            <Card className="border-white/10 bg-zinc-900/50 backdrop-blur-md overflow-hidden">
+              <div className="h-24 bg-gradient-to-r from-purple-600/20 to-indigo-600/20"></div>
+              <div className="-mt-12 px-6">
+                <div className="flex justify-center">
                   <div className="relative">
-                    <Avatar className="h-20 w-20">
+                    <Avatar className="h-24 w-24 border-4 border-zinc-900">
                       {profileUser.avatarUrl ? (
                         <AvatarImage src={profileUser.avatarUrl} alt={profileUser.username} />
                       ) : (
-                        <AvatarFallback className="bg-zinc-800 text-white text-2xl">
+                        <AvatarFallback className="bg-gradient-to-br from-purple-600/30 to-indigo-600/30 text-white text-2xl">
                           {profileUser.username.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       )}
@@ -223,9 +238,9 @@ export default function UserProfilePage() {
                     {isOwnProfile && (
                       <label
                         htmlFor="avatar-upload"
-                        className="absolute bottom-0 right-0 p-1 bg-zinc-800 rounded-full cursor-pointer hover:bg-zinc-700 transition-colors"
+                        className="absolute bottom-0 right-0 p-2 bg-purple-600 rounded-full cursor-pointer hover:bg-purple-700 transition-colors"
                       >
-                        <Camera className="h-4 w-4" />
+                        <Camera className="h-4 w-4 text-white" />
                         <input
                           id="avatar-upload"
                           type="file"
@@ -237,89 +252,97 @@ export default function UserProfilePage() {
                     )}
                   </div>
                 </div>
-                <CardTitle className="text-2xl font-bold text-center">
-                  <RoleUsername user={profileUser} />
-                </CardTitle>
-                <CardDescription className="text-center">
+
+                <div className="mt-4 text-center">
+                  <h2 className="text-2xl font-bold text-white">
+                    <RoleUsername user={profileUser} />
+                  </h2>
+
                   {profileUser.isAdmin && (
-                    <span className="text-white bg-zinc-800 px-2 py-1 rounded text-xs">
-                      Admin
+                    <span className="inline-flex items-center px-2.5 py-0.5 mt-2 rounded-full text-xs font-medium bg-purple-600/20 text-purple-400 border border-purple-600/30">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Administrator
                     </span>
                   )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center text-zinc-400 text-sm gap-2">
+
+                  <div className="flex items-center justify-center text-white/50 text-sm gap-2 mt-3">
                     <Calendar className="h-4 w-4" />
                     <span>Joined {formatDate(profileUser.createdAt)}</span>
                   </div>
+                </div>
 
-                  <div className="border-t border-zinc-800 pt-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">Bio</h3>
-                      {isOwnProfile && !isEditingBio && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsEditingBio(true)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    {isOwnProfile && isEditingBio ? (
-                      <Form {...bioForm}>
-                        <form onSubmit={bioForm.handleSubmit(onBioSubmit)} className="space-y-4">
-                          <FormField
-                            control={bioForm.control}
-                            name="bio"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Textarea 
-                                    placeholder="Tell us about yourself..." 
-                                    className="resize-none"
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setIsEditingBio(false)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button 
-                              type="submit" 
-                              size="sm"
-                              disabled={updateBioMutation.isPending}
-                            >
-                              {updateBioMutation.isPending ? "Saving..." : "Save"}
-                            </Button>
-                          </div>
-                        </form>
-                      </Form>
-                    ) : (
-                      <p className="text-sm text-zinc-300">
-                        {profileUser.bio || "This user hasn't written a bio yet."}
-                      </p>
+                <Separator className="my-6 bg-white/10" />
+
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-white">Bio</h3>
+                    {isOwnProfile && !isEditingBio && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsEditingBio(true)}
+                        className="text-white/50 hover:text-white hover:bg-white/5"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
                     )}
                   </div>
+                  {isOwnProfile && isEditingBio ? (
+                    <Form {...bioForm}>
+                      <form onSubmit={bioForm.handleSubmit(onBioSubmit)} className="space-y-4">
+                        <FormField
+                          control={bioForm.control}
+                          name="bio"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Tell us about yourself..." 
+                                  className="resize-none bg-zinc-800 border-white/10 text-white"
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage className="text-red-400" />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsEditingBio(false)}
+                            className="border-white/10 text-white/70 hover:bg-white/5"
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            size="sm"
+                            className="bg-purple-600 hover:bg-purple-700 text-white"
+                            disabled={updateBioMutation.isPending}
+                          >
+                            {updateBioMutation.isPending ? "Saving..." : "Save"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  ) : (
+                    <p className="text-sm text-white/70">
+                      {profileUser.bio || "This user hasn't written a bio yet."}
+                    </p>
+                  )}
                 </div>
-              </CardContent>
+              </div>
             </Card>
 
             {/* Comments section */}
-            <Card className="mt-6 border-zinc-800">
+            <Card className="mt-6 border-white/10 bg-zinc-900/50 backdrop-blur-md">
               <CardHeader>
-                <CardTitle className="text-xl">Comments</CardTitle>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-purple-400" />
+                  <CardTitle className="text-xl text-white">Comments</CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 {/* Comment form - now available to everyone */}
@@ -333,17 +356,18 @@ export default function UserProfilePage() {
                           <FormControl>
                             <Textarea 
                               placeholder="Leave a comment..." 
-                              className="resize-none"
+                              className="resize-none bg-zinc-800 border-white/10 text-white"
                               {...field} 
                             />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-red-400" />
                         </FormItem>
                       )}
                     />
                     <Button 
                       type="submit" 
                       size="sm"
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
                       disabled={addCommentMutation.isPending}
                     >
                       {addCommentMutation.isPending ? "Posting..." : "Post Comment"}
@@ -352,34 +376,50 @@ export default function UserProfilePage() {
                 </Form>
 
                 {isCommentsLoading ? (
-                  <div className="py-4 text-center">
-                    <div className="h-8 w-8 text-primary mx-auto">Loading...</div>
+                  <div className="py-4 space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-zinc-800/50 animate-pulse"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-24 bg-zinc-800/50 rounded animate-pulse"></div>
+                          <div className="h-16 bg-zinc-800/50 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : commentsError ? (
-                  <div className="py-4 text-center text-destructive">
+                  <div className="py-4 text-center text-red-400">
                     Error loading comments
                   </div>
                 ) : comments && comments.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {comments.map((comment) => (
-                      <div key={comment.id} className="border-t border-zinc-800 pt-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="bg-zinc-800 text-white text-xs">
+                      <div key={comment.id} className="border-t border-white/10 pt-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 text-white text-xs">
                               {comment.userId === 0 ? 'A' : 'U'}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="text-xs text-zinc-400">
-                            {comment.userId === 0 ? 'Anonymous' : `User #${comment.userId}`} • {format(new Date(comment.createdAt), "MMM d, yyyy")}
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-white">
+                              {comment.userId === 0 ? 'Anonymous' : `User #${comment.userId}`}
+                            </div>
+                            <div className="text-xs text-white/50">
+                              {format(new Date(comment.createdAt), "MMM d, yyyy")}
+                            </div>
                           </div>
                         </div>
-                        <p className="text-sm text-zinc-300">{comment.content}</p>
+                        <p className="text-sm text-white/80 ml-11">{comment.content}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="py-4 text-center text-zinc-400">
-                    No comments yet
+                  <div className="py-6 text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800/50 mb-3">
+                      <MessageSquare className="h-6 w-6 text-white/30" />
+                    </div>
+                    <p className="text-white/50">No comments yet</p>
                   </div>
                 )}
               </CardContent>
@@ -387,20 +427,25 @@ export default function UserProfilePage() {
           </div>
 
           {/* User's pastes */}
-          <div className="md:col-span-2">
-            <Card className="border-zinc-800">
+          <div className="lg:col-span-3">
+            <Card className="border-white/10 bg-zinc-900/50 backdrop-blur-md">
               <CardHeader>
-                <CardTitle className="text-xl">
-                  {profileUser.username}'s Pastes
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-purple-400" />
+                  <CardTitle className="text-xl text-white">
+                    {profileUser.username}'s Pastes
+                  </CardTitle>
+                </div>
               </CardHeader>
               <CardContent>
                 {isPastesLoading ? (
-                  <div className="py-8 text-center">
-                    <div className="h-8 w-8 text-primary mx-auto">Loading...</div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-28 bg-zinc-800/50 rounded-lg animate-pulse"></div>
+                    ))}
                   </div>
                 ) : pastesError ? (
-                  <div className="py-8 text-center text-destructive">
+                  <div className="py-8 text-center text-red-400">
                     Error loading pastes
                   </div>
                 ) : userPastes && userPastes.length > 0 ? (
@@ -415,8 +460,11 @@ export default function UserProfilePage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-zinc-400">
-                    No pastes found
+                  <div className="py-12 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-800/50 mb-4">
+                      <FileText className="h-8 w-8 text-white/30" />
+                    </div>
+                    <p className="text-white/50">No pastes found</p>
                   </div>
                 )}
               </CardContent>
