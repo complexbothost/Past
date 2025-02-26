@@ -23,7 +23,7 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
   const { toast } = useToast();
 
   const canDelete = user && (user.id === paste.userId || user.isAdmin);
-  
+
   const handleDelete = async () => {
     try {
       await apiRequest("DELETE", `/api/pastes/${paste.id}`);
@@ -53,20 +53,20 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
   };
 
   return (
-    <Card className={`h-full flex flex-col hover:border-primary/50 transition-colors ${
-      isClown ? 'border-purple-800/50 bg-purple-950/10' : 
-      (paste.isPrivate && showPrivateBadge) ? 'border-amber-800/50 bg-amber-950/10' : ''
+    <Card className={`h-full flex flex-col border-zinc-800 ${
+      isClown ? 'bg-zinc-900' : 
+      (paste.isPrivate && showPrivateBadge) ? 'bg-zinc-900' : ''
     }`}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start gap-2">
           <CardTitle className="text-lg font-bold">{paste.title}</CardTitle>
           {(paste.isPrivate && showPrivateBadge) && (
-            <Badge variant="outline" className="bg-amber-900/20 text-amber-400 flex items-center gap-1">
+            <Badge variant="outline" className="bg-zinc-800 text-white flex items-center gap-1">
               <Lock className="h-3 w-3" /> Private
             </Badge>
           )}
           {isClown && (
-            <Badge variant="secondary" className="bg-purple-800 text-white">
+            <Badge variant="secondary" className="bg-zinc-800 text-white">
               Clown
             </Badge>
           )}
@@ -78,7 +78,7 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="bg-zinc-900 p-3 rounded-md border border-zinc-800 h-28 overflow-hidden">
-          <pre className="text-xs whitespace-pre-wrap text-slate-300">
+          <pre className="text-xs whitespace-pre-wrap text-white">
             {truncateContent(paste.content)}
           </pre>
         </div>
@@ -92,11 +92,11 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
         >
           <ExternalLink className="h-3 w-3 mr-1" /> View Full
         </Button>
-        
+
         {canDelete && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-xs text-destructive">
+              <Button variant="ghost" size="sm" className="text-xs text-white">
                 <Trash className="h-3 w-3 mr-1" /> Delete
               </Button>
             </AlertDialogTrigger>

@@ -13,14 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Loader2, Users, FileText, Link, LockOpen, UserX, Shield, Eye, EyeOff } from "lucide-react";
+import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedPaste, setSelectedPaste] = useState<Paste | null>(null);
-  
+
   // Get all users
   const { 
     data: users, 
@@ -29,7 +29,7 @@ export default function AdminPage() {
   } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
   });
-  
+
   // Get all public pastes
   const { 
     data: pastes, 
@@ -38,7 +38,7 @@ export default function AdminPage() {
   } = useQuery<Paste[]>({
     queryKey: ["/api/pastes"],
   });
-  
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -59,7 +59,7 @@ export default function AdminPage() {
       });
     },
   });
-  
+
   // Update paste mutation
   const updatePasteMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<Paste> }) => {
@@ -82,7 +82,7 @@ export default function AdminPage() {
       });
     },
   });
-  
+
   // Delete paste mutation
   const deletePasteMutation = useMutation({
     mutationFn: async (pasteId: number) => {
@@ -104,32 +104,32 @@ export default function AdminPage() {
       });
     },
   });
-  
+
   const formatDate = (date: Date | string) => {
     return format(new Date(date), "MMM d, yyyy");
   };
-  
+
   const handleDeleteUser = (userId: number) => {
     deleteUserMutation.mutate(userId);
   };
-  
+
   const handleMarkAsClown = (paste: Paste) => {
     updatePasteMutation.mutate({
       id: paste.id,
       data: { isClown: !paste.isClown }
     });
   };
-  
+
   const handleDeletePaste = (pasteId: number) => {
     deletePasteMutation.mutate(pasteId);
   };
-  
+
   if (!user?.isAdmin) {
     return (
       <PageLayout>
         <div className="container mx-auto py-16 flex justify-center">
           <div className="text-center">
-            <Shield className="h-16 w-16 text-destructive mx-auto mb-4" />
+            <Shield className="h-16 w-16 text-white mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
             <p className="text-muted-foreground">
               You don't have permission to access this page.
@@ -139,7 +139,7 @@ export default function AdminPage() {
       </PageLayout>
     );
   }
-  
+
   return (
     <PageLayout>
       <div className="container mx-auto py-6">
@@ -149,7 +149,7 @@ export default function AdminPage() {
             Manage users and pastes on your platform
           </p>
         </div>
-        
+
         <Tabs defaultValue="users" className="w-full">
           <TabsList className="grid grid-cols-2 mb-8">
             <TabsTrigger value="users" className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function AdminPage() {
               Pastes
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="users" className="pt-2">
             <Card>
               <CardHeader>
@@ -173,7 +173,7 @@ export default function AdminPage() {
               <CardContent>
                 {usersLoading ? (
                   <div className="flex justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <div className="h-8 w-8 text-primary">Loading...</div>
                   </div>
                 ) : users && users.length > 0 ? (
                   <div className="overflow-x-auto">
@@ -196,7 +196,7 @@ export default function AdminPage() {
                             <TableCell>{u.ipAddress || 'Unknown'}</TableCell>
                             <TableCell>
                               {u.isAdmin ? (
-                                <Badge variant="outline" className="bg-primary/20 text-primary">
+                                <Badge variant="outline" className="bg-zinc-900 text-white">
                                   Admin
                                 </Badge>
                               ) : (
@@ -242,7 +242,7 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="pastes" className="pt-2">
             <Card>
               <CardHeader>
@@ -254,7 +254,7 @@ export default function AdminPage() {
               <CardContent>
                 {pastesLoading ? (
                   <div className="flex justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <div className="h-8 w-8 text-primary">Loading...</div>
                   </div>
                 ) : pastes && pastes.length > 0 ? (
                   <div className="overflow-x-auto">
@@ -278,11 +278,11 @@ export default function AdminPage() {
                             <TableCell>{p.userId}</TableCell>
                             <TableCell>
                               {p.isPrivate ? (
-                                <Badge variant="outline" className="bg-amber-900/20 text-amber-500">
+                                <Badge variant="outline" className="bg-zinc-900 text-white">
                                   Private
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="bg-green-900/20 text-green-500">
+                                <Badge variant="outline" className="bg-zinc-900 text-white">
                                   Public
                                 </Badge>
                               )}
@@ -310,19 +310,19 @@ export default function AdminPage() {
                                       </DialogDescription>
                                     </DialogHeader>
                                     <div className="bg-zinc-900 p-4 rounded-md border border-zinc-800 mt-2 max-h-[400px] overflow-y-auto">
-                                      <pre className="text-sm whitespace-pre-wrap break-words text-slate-200">
+                                      <pre className="text-sm whitespace-pre-wrap break-words text-white">
                                         {selectedPaste?.content}
                                       </pre>
                                     </div>
                                   </DialogContent>
                                 </Dialog>
-                                
+
                                 <Button variant="outline" size="sm" asChild>
                                   <a href={`/paste/${p.id}`} target="_blank" rel="noopener noreferrer">
                                     <Link className="h-4 w-4" />
                                   </a>
                                 </Button>
-                                
+
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
                                     <Button variant="destructive" size="sm">

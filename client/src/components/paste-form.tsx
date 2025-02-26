@@ -10,7 +10,6 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
 
 interface PasteFormProps {
   onSuccess?: () => void;
@@ -63,7 +62,7 @@ export default function PasteForm({ onSuccess }: PasteFormProps) {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="content"
@@ -81,7 +80,7 @@ export default function PasteForm({ onSuccess }: PasteFormProps) {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="isPrivate"
@@ -102,20 +101,13 @@ export default function PasteForm({ onSuccess }: PasteFormProps) {
             </FormItem>
           )}
         />
-        
+
         <Button 
           type="submit" 
           className="w-full"
           disabled={createPasteMutation.isPending}
         >
-          {createPasteMutation.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            "Create Paste"
-          )}
+          {createPasteMutation.isPending ? "Creating..." : "Create Paste"}
         </Button>
       </form>
     </Form>

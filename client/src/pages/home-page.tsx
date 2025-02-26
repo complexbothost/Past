@@ -8,7 +8,7 @@ import PageLayout from "@/components/layout/page-layout";
 import PasteForm from "@/components/paste-form";
 import PasteCard from "@/components/paste-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Plus, FileText, User, ScrollText } from "lucide-react";
+import { FileText, Plus, User, ScrollText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function HomePage() {
@@ -60,9 +60,7 @@ export default function HomePage() {
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-white">
-            <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-              DoxNightmare
-            </span>
+            DoxNightmare
           </h1>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -95,11 +93,11 @@ export default function HomePage() {
               Clown Pastes
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="public" className="pt-2">
             {publicPastesLoading ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div className="h-8 w-8 text-primary">Loading...</div>
               </div>
             ) : publicPastesError ? (
               <div className="text-center py-8 text-destructive">Error loading pastes</div>
@@ -123,7 +121,7 @@ export default function HomePage() {
           <TabsContent value="my-pastes" className="pt-2">
             {userPastesLoading ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div className="h-8 w-8 text-primary">Loading...</div>
               </div>
             ) : userPastesError ? (
               <div className="text-center py-8 text-destructive">Error loading your pastes</div>
@@ -148,7 +146,7 @@ export default function HomePage() {
           <TabsContent value="clown" className="pt-2">
             {clownPastesLoading ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div className="h-8 w-8 text-primary">Loading...</div>
               </div>
             ) : clownPastesError ? (
               <div className="text-center py-8 text-destructive">Error loading clown pastes</div>

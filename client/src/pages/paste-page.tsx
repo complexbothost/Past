@@ -8,7 +8,7 @@ import PageLayout from "@/components/layout/page-layout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Calendar, Eye, Lock, Trash } from "lucide-react";
+import { ArrowLeft, Calendar, Eye, Lock, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -52,7 +52,7 @@ export default function PastePage() {
     return (
       <PageLayout>
         <div className="container mx-auto py-16 flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="h-8 w-8 text-primary">Loading...</div>
         </div>
       </PageLayout>
     );
@@ -87,7 +87,7 @@ export default function PastePage() {
         <Button variant="outline" className="mb-6" onClick={() => navigate("/")}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Pastes
         </Button>
-        
+
         <Card className="border-zinc-800">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
@@ -99,19 +99,19 @@ export default function PastePage() {
                     {formatDate(paste.createdAt)}
                   </span>
                   {paste.isPrivate && (
-                    <span className="flex items-center gap-1 text-amber-400">
+                    <span className="flex items-center gap-1 text-white">
                       <Lock className="h-4 w-4" />
                       Private
                     </span>
                   )}
                   {paste.isClown && (
-                    <Badge variant="secondary" className="bg-purple-800 text-white">
+                    <Badge variant="secondary" className="bg-zinc-800 text-white">
                       Clown
                     </Badge>
                   )}
                 </CardDescription>
               </div>
-              
+
               {canDelete && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -137,7 +137,7 @@ export default function PastePage() {
           </CardHeader>
           <CardContent>
             <div className="bg-zinc-900 p-5 rounded-md border border-zinc-800 overflow-x-auto">
-              <pre className="text-sm whitespace-pre-wrap break-words text-slate-200">
+              <pre className="text-sm whitespace-pre-wrap break-words text-white">
                 {paste.content}
               </pre>
             </div>

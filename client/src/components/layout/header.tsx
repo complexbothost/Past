@@ -43,9 +43,7 @@ export default function Header() {
     <header className="bg-zinc-900 border-b border-zinc-800">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link href="/" className="text-xl font-bold text-white">
-          <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-            DoxNightmare
-          </span>
+          DoxNightmare
         </Link>
 
         <div className="flex items-center gap-4">
@@ -68,7 +66,7 @@ export default function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
+                  <AvatarFallback className="bg-zinc-800 text-white">
                     {user.username.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
