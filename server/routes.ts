@@ -2,13 +2,12 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertPasteSchema, insertCommentSchema } from "@shared/schema";
+import { insertPasteSchema, insertCommentSchema, UserRole } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express from 'express';
-
 
 // Middleware to check if user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
@@ -257,11 +256,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { role } = req.body;
-      if (role && !Object.values(UserRole).includes(role)) {
+      if (role !== null && role !== undefined && !Object.values(UserRole).includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
       }
 
-      const user = await storage.updateUser(id, { role });
+      const user = await storage.updateUser(id, { role: role || null });
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
