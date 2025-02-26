@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
-import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, Edit, User as UserIcon } from "lucide-react";
+import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, Edit, User as UserIcon, Pin, PinOff } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RoleUsername from "@/components/role-username";
@@ -124,6 +124,9 @@ export default function AdminPage() {
     content: z.string().min(1, "Content is required"),
     isPrivate: z.boolean().default(false),
     isClown: z.boolean().default(false),
+    isAdminPaste: z.boolean().default(false),
+    isPinned: z.boolean().default(false),
+    extraDetails: z.string().optional(),
   });
 
   // Edit paste form
@@ -134,6 +137,9 @@ export default function AdminPage() {
       content: "",
       isPrivate: false,
       isClown: false,
+      isAdminPaste: false,
+      isPinned: false,
+      extraDetails: "",
     },
   });
 
@@ -145,6 +151,9 @@ export default function AdminPage() {
       content: paste.content,
       isPrivate: paste.isPrivate,
       isClown: paste.isClown,
+      isAdminPaste: paste.isAdminPaste || false,
+      isPinned: paste.isPinned || false,
+      extraDetails: paste.extraDetails || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -152,9 +161,22 @@ export default function AdminPage() {
   // Handle submit edit form
   const onSubmitEditForm = (data: z.infer<typeof editPasteSchema>) => {
     if (pasteToEdit) {
+      // Calculate pinnedUntil if the paste is being pinned
+      let updateData = { ...data };
+
+      if (data.isPinned) {
+        // Set pinnedUntil to 24 hours from now
+        const pinnedUntil = new Date();
+        pinnedUntil.setHours(pinnedUntil.getHours() + 24);
+        updateData.pinnedUntil = pinnedUntil;
+      } else {
+        // Clear pinnedUntil if unpinning
+        updateData.pinnedUntil = null;
+      }
+
       updatePasteMutation.mutate({
         id: pasteToEdit.id,
-        data: data,
+        data: updateData,
       });
     }
   };
@@ -171,6 +193,43 @@ export default function AdminPage() {
     updatePasteMutation.mutate({
       id: paste.id,
       data: { isClown: !paste.isClown }
+    });
+  };
+
+  const handleTogglePin = (paste: Paste) => {
+    // If currently pinned, unpin it
+    if (paste.isPinned) {
+      updatePasteMutation.mutate({
+        id: paste.id,
+        data: { 
+          isPinned: false,
+          pinnedUntil: null
+        }
+      });
+    } 
+    // If not pinned, pin it for 24 hours
+    else {
+      const pinnedUntil = new Date();
+      pinnedUntil.setHours(pinnedUntil.getHours() + 24);
+
+      updatePasteMutation.mutate({
+        id: paste.id,
+        data: { 
+          isPinned: true,
+          pinnedUntil: pinnedUntil
+        }
+      });
+    }
+  };
+
+  const handleToggleAdminPaste = (paste: Paste) => {
+    updatePasteMutation.mutate({
+      id: paste.id,
+      data: { 
+        isAdminPaste: !paste.isAdminPaste,
+        // If turning on admin paste, also include any existing extraDetails
+        extraDetails: paste.extraDetails || ""
+      }
     });
   };
 
@@ -364,7 +423,8 @@ export default function AdminPage() {
                           <TableHead>Title</TableHead>
                           <TableHead>User ID</TableHead>
                           <TableHead>Private</TableHead>
-                          <TableHead>Clown</TableHead>
+                          <TableHead>Admin/Clown</TableHead>
+                          <TableHead>Pin Status</TableHead>
                           <TableHead>Created</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
@@ -395,18 +455,45 @@ export default function AdminPage() {
                               )}
                             </TableCell>
                             <TableCell>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <div className="flex items-center gap-1">
+                                  <Switch
+                                    checked={p.isClown}
+                                    onCheckedChange={() => handleMarkAsClown(p)}
+                                  />
+                                  <span className="text-xs">Clown</span>
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  <Switch
+                                    checked={p.isAdminPaste}
+                                    onCheckedChange={() => handleToggleAdminPaste(p)}
+                                  />
+                                  <span className="text-xs">Admin</span>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               <div className="flex items-center gap-2">
-                                <Switch
-                                  checked={p.isClown}
-                                  onCheckedChange={() => handleMarkAsClown(p)}
-                                />
-                                <Button
-                                  variant={p.isClown ? "destructive" : "outline"}
-                                  size="sm"
-                                  onClick={() => handleMarkAsClown(p)}
-                                >
-                                  {p.isClown ? "Remove from Clown" : "Add to Clown"}
-                                </Button>
+                                {p.isPinned && p.pinnedUntil && new Date(p.pinnedUntil) > new Date() ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleTogglePin(p)}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <PinOff className="h-4 w-4" /> Unpin
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleTogglePin(p)}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Pin className="h-4 w-4" /> Pin (24h)
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell>{formatDate(p.createdAt)}</TableCell>
@@ -529,7 +616,7 @@ export default function AdminPage() {
                   )}
                 />
 
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-wrap">
                   <FormField
                     control={editPasteForm.control}
                     name="isPrivate"
@@ -561,7 +648,57 @@ export default function AdminPage() {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={editPasteForm.control}
+                    name="isAdminPaste"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Admin Paste</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editPasteForm.control}
+                    name="isPinned"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2 space-y-0">
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Pin for 24h</FormLabel>
+                      </FormItem>
+                    )}
+                  />
                 </div>
+
+                <FormField
+                  control={editPasteForm.control}
+                  name="extraDetails"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Admin Extra Details</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Extra details for admin paste..."
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button

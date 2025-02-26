@@ -32,6 +32,48 @@
       text-shadow: -2px -2px #ff00ea, 2px 2px #00ff9d;
     }
   }
+
+  /* Rainbow background animation */
+  @keyframes rainbow-bg {
+    0% { background-position: 0% 50% }
+    50% { background-position: 100% 50% }
+    100% { background-position: 0% 50% }
+  }
+
+  /* Shooting star animations */
+  @keyframes shooting-star {
+    0% {
+      transform: translateX(-100%) translateY(0);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(200%) translateY(100%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes shooting-star-alt {
+    0% {
+      transform: translateX(-100%) translateY(100%);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(200%) translateY(0);
+      opacity: 0;
+    }
+  }
 }
 
 /* Role-specific styles */
@@ -64,4 +106,83 @@
 
 .role-gang.glitch-active {
   animation: glitch 0.1s ease-in-out;
+}
+
+/* Admin paste styles */
+.admin-paste-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.rainbow-bg {
+  background: linear-gradient(-45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+  background-size: 400% 400%;
+  animation: rainbow-bg 10s ease infinite;
+}
+
+.stars-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shooting-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 3px 1px rgba(255, 255, 255, 0.9);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.shooting-star:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 1px;
+  background: linear-gradient(to right, rgba(255,255,255,0.9), rgba(255,255,255,0));
+  transform: translateX(-100%);
+}
+
+.shooting-star:nth-child(1) {
+  top: 10%;
+  left: 10%;
+  animation: shooting-star 3s linear infinite;
+  animation-delay: 0s;
+}
+
+.shooting-star:nth-child(2) {
+  top: 30%;
+  left: 20%;
+  animation: shooting-star-alt 4s linear infinite;
+  animation-delay: 1s;
+}
+
+.shooting-star:nth-child(3) {
+  top: 50%;
+  left: 15%;
+  animation: shooting-star 6s linear infinite;
+  animation-delay: 2s;
+}
+
+.shooting-star:nth-child(4) {
+  top: 70%;
+  left: 30%;
+  animation: shooting-star-alt 5s linear infinite;
+  animation-delay: 3s;
+}
+
+.shooting-star:nth-child(5) {
+  top: 90%;
+  left: 40%;
+  animation: shooting-star 7s linear infinite;
+  animation-delay: 1.5s;
 }

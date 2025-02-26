@@ -94,42 +94,29 @@ export default function PastePage() {
   // Check if the paste is currently pinned (pinnedUntil time is in the future)
   const isPinned = paste.isPinned && paste.pinnedUntil && new Date(paste.pinnedUntil) > new Date();
 
-  // Create rainbow animation styles for admin pastes
-  const rainbowStyle = paste.isAdminPaste ? {
-    background: 'linear-gradient(-45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
-    backgroundSize: '400% 400%',
-    animation: 'rainbow-bg 3s ease infinite',
-    padding: '3px', // Border thickness
-    borderRadius: '0.5rem',
-  } : {};
-
   return (
     <PageLayout>
-      <style>
-        {`
-        @keyframes rainbow-bg {
-          0% { background-position: 0% 50% }
-          50% { background-position: 100% 50% }
-          100% { background-position: 0% 50% }
-        }
-        `}
-      </style>
-
       <div className="container mx-auto py-8">
         <Button variant="outline" className="mb-6" onClick={() => navigate("/")}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Pastes
         </Button>
 
-        <div className={`relative ${paste.isAdminPaste ? 'transform scale-125 my-12' : ''}`}>
-          {/* Rainbow border for admin pastes */}
+        <div className={`relative ${paste.isAdminPaste ? 'transform scale-125 my-12 admin-paste-container' : ''}`}>
+          {/* Rainbow background and shooting stars for admin pastes */}
           {paste.isAdminPaste && (
-            <div 
-              className="absolute inset-0 rounded-lg z-0" 
-              style={rainbowStyle}
-            ></div>
+            <>
+              <div className="absolute inset-0 rounded-lg z-0 rainbow-bg"></div>
+              <div className="stars-container">
+                <div className="shooting-star"></div>
+                <div className="shooting-star"></div>
+                <div className="shooting-star"></div>
+                <div className="shooting-star"></div>
+                <div className="shooting-star"></div>
+              </div>
+            </>
           )}
 
-          <Card className={`border-zinc-800 relative z-10 ${paste.isAdminPaste ? 'bg-zinc-900 border-0 m-[3px]' : ''}`}>
+          <Card className={`border-zinc-800 relative z-10 ${paste.isAdminPaste ? 'bg-zinc-900/70 border-0 m-[3px]' : ''}`}>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <div>

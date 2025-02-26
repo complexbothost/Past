@@ -62,40 +62,36 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
     return format(new Date(date), "MMM d, yyyy");
   };
 
-  // Create rainbow animation styles for admin pastes
-  const rainbowStyle = paste.isAdminPaste ? {
-    background: 'linear-gradient(-45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
-    backgroundSize: '400% 400%',
-    animation: 'rainbow-bg 3s ease infinite',
-    padding: '2px',
-    borderRadius: '0.5rem',
-  } : {};
-
-  // Scale factor for admin pastes (2x size)
-  const adminScale = paste.isAdminPaste ? {
-    transform: 'scale(1.0)',
-    margin: '1rem 0',
-    transition: 'transform 0.3s ease',
-  } : {};
-
   return (
     <div 
-      className={`relative ${paste.isAdminPaste ? 'col-span-1 md:col-span-2 lg:col-span-3' : ''}`}
-      style={adminScale}
+      className={`relative ${paste.isAdminPaste ? 'col-span-1 md:col-span-2 lg:col-span-3 admin-paste-container' : ''}`}
+      style={paste.isAdminPaste ? {
+        transform: 'scale(1.0)',
+        margin: '1rem 0',
+        transition: 'transform 0.3s ease',
+      } : {}}
     >
-      {/* Rainbow border for admin pastes */}
+      {/* Rainbow background and shooting stars for admin pastes */}
       {paste.isAdminPaste && (
-        <div 
-          className="absolute inset-0 rounded-lg z-0" 
-          style={rainbowStyle}
-        ></div>
+        <>
+          <div 
+            className="absolute inset-0 rounded-lg z-0 rainbow-bg" 
+          ></div>
+          <div className="stars-container">
+            <div className="shooting-star"></div>
+            <div className="shooting-star"></div>
+            <div className="shooting-star"></div>
+            <div className="shooting-star"></div>
+            <div className="shooting-star"></div>
+          </div>
+        </>
       )}
 
       <div 
         className={`flex items-center justify-between py-2 px-4 hover:bg-zinc-800/50 rounded-lg transition-colors relative z-10 ${
           isClown ? 'bg-zinc-900/50' : 
           (paste.isPrivate && showPrivateBadge) ? 'bg-zinc-900/50' : ''
-        } ${paste.isAdminPaste ? 'bg-zinc-900 border border-zinc-800 m-[2px]' : ''}`}
+        } ${paste.isAdminPaste ? 'bg-zinc-900/70 border border-zinc-800 m-[2px]' : ''}`}
       >
         <div className="flex items-center gap-6 min-w-0">
           <h3 
@@ -175,7 +171,7 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
 
       {/* Show extra details for admin pastes if available */}
       {paste.isAdminPaste && paste.extraDetails && (
-        <div className="mt-2 px-4 py-3 bg-zinc-900/70 rounded-lg border border-zinc-800 text-sm">
+        <div className="mt-2 px-4 py-3 bg-zinc-900/70 rounded-lg border border-zinc-800 text-sm relative z-10">
           <div className="flex items-center gap-2 mb-1 text-white">
             <Info className="h-4 w-4" />
             <span className="font-medium">Admin Note</span>
