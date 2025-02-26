@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   ipAddress: text("ip_address"),
   bio: text("bio").default(""),
+  avatarUrl: text("avatar_url"),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -16,6 +17,11 @@ export const users = pgTable("users", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+});
+
+// Bio update schema
+export const updateBioSchema = z.object({
+  bio: z.string().max(500, "Bio must be 500 characters or less"),
 });
 
 // Paste schema
@@ -56,3 +62,4 @@ export type InsertPaste = z.infer<typeof insertPasteSchema>;
 export type Paste = typeof pastes.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
+export type UpdateBio = z.infer<typeof updateBioSchema>;

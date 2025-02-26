@@ -57,6 +57,7 @@ export class MemStorage implements IStorage {
       password: "password123", // Changed from hashed password to plaintext for easier access
       ipAddress: "127.0.0.1",
       bio: "Admin of DoxNightmare. I can see everything.",
+      avatarUrl: null,
       isAdmin: true,
       createdAt: new Date(),
     });
@@ -73,13 +74,14 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async createUser(insertUser: InsertUser & { ipAddress?: string, bio?: string, isAdmin?: boolean, createdAt?: Date }): Promise<User> {
+  async createUser(insertUser: InsertUser & { ipAddress?: string, bio?: string, avatarUrl?: string | null, isAdmin?: boolean, createdAt?: Date }): Promise<User> {
     const id = this.userCurrentId++;
     const user: User = { 
       ...insertUser, 
       id, 
       ipAddress: insertUser.ipAddress || null,
       bio: insertUser.bio || "",
+      avatarUrl: insertUser.avatarUrl || null,
       isAdmin: insertUser.isAdmin || false,
       createdAt: insertUser.createdAt || new Date() 
     };

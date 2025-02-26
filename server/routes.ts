@@ -4,6 +4,11 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertPasteSchema, insertCommentSchema } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import express from 'express';
+
 
 // Middleware to check if user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
@@ -20,6 +25,34 @@ const isAdmin = (req: Request, res: Response, next: Function) => {
   }
   res.status(403).json({ message: "Forbidden" });
 };
+
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storageMulter = multer.diskStorage({
+  destination: uploadDir,
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storageMulter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -359,6 +392,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error updating paste" });
     }
   });
+
+  // New endpoint: Upload avatar
+  app.post("/api/users/:id/avatar", isAuthenticated, upload.single('avatar'), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      // Only allow users to update their own avatar
+      if (req.user!.id !== id) {
+        return res.status(403).json({ message: "You don't have permission to update this user's avatar" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const avatarUrl = `/uploads/${req.file.filename}`;
+      const user = await storage.updateUser(id, { avatarUrl });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (err) {
+      res.status(500).json({ message: "Error updating avatar" });
+    }
+  });
+
+  app.use('/uploads', express.static(uploadDir));
 
   const httpServer = createServer(app);
 
