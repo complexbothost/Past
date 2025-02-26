@@ -41,9 +41,7 @@ export default function TOSPage() {
               Users are responsible for all content they post on the platform. You agree not to use DoxNightmare to:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-white/80 mb-4">
-              <li>Post illegal, harmful, threatening, abusive, or otherwise objectionable content</li>
-              <li>Impersonate any person or entity or falsely state or misrepresent your affiliation</li>
-              <li>Upload or share content that infringes upon intellectual property rights</li>
+              <li>Any paste directed to any user under the age of 14 is against our TOS</li>
               <li>Distribute malware, viruses, or any code designed to interfere with our platform</li>
               <li>Collect or harvest user information without explicit consent</li>
             </ul>
@@ -62,12 +60,6 @@ export default function TOSPage() {
             <p className="text-white/80 leading-relaxed mb-4">
               You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. Notify us immediately of any unauthorized use of your account.
             </p>
-
-            <h2 className="text-xl font-semibold text-white mb-4">6. Termination</h2>
-            <p className="text-white/80 leading-relaxed mb-4">
-              We reserve the right to terminate or suspend your account and access to DoxNightmare at our sole discretion, without notice, for conduct that we believe violates these Terms of Service or is harmful to other users, us, or third parties, or for any other reason.
-            </p>
-
             <h2 className="text-xl font-semibold text-white mb-4">7. Changes to Terms</h2>
             <p className="text-white/80 leading-relaxed mb-4">
               We may revise these Terms of Service at any time by updating this page. Your continued use of the platform after such changes constitutes your acceptance of the new terms.
@@ -78,14 +70,14 @@ export default function TOSPage() {
               DoxNightmare is provided "as is" without warranties of any kind, either express or implied. We do not guarantee that the platform will be error-free or uninterrupted.
             </p>
 
-            <h2 className="text-xl font-semibold text-white mb-4">9. Limitation of Liability</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">9. legalities</h2>
             <p className="text-white/80 leading-relaxed mb-4">
-              To the fullest extent permitted by law, DoxNightmare shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of the platform.
+              if there is any questions about the legalities of our site, email us at antiextorter@proton.me.
             </p>
 
             <h2 className="text-xl font-semibold text-white mb-4">10. Contact Information</h2>
             <p className="text-white/80 leading-relaxed">
-              If you have any questions about these Terms of Service, please contact us at support@doxnightmare.com.
+              If you have any questions about these rules, join our discord /taste.
             </p>
           </CardContent>
         </Card>

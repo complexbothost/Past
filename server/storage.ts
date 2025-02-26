@@ -4,6 +4,9 @@ import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
 
+// Corrected SessionStore type
+type SessionStore = ReturnType<typeof createMemoryStore>;
+
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -28,14 +31,14 @@ export interface IStorage {
   deleteComment(id: number): Promise<boolean>;
 
   // Session storage
-  sessionStore: session.SessionStore;
+  sessionStore: SessionStore;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private pastes: Map<number, Paste>;
   private comments: Map<number, Comment>;
-  sessionStore: session.SessionStore;
+  sessionStore: SessionStore;
   userCurrentId: number;
   pasteCurrentId: number;
   commentCurrentId: number;
@@ -83,6 +86,7 @@ export class MemStorage implements IStorage {
       bio: insertUser.bio || "",
       avatarUrl: insertUser.avatarUrl || null,
       isAdmin: insertUser.isAdmin || false,
+      role: insertUser.role || null, // Add role property with default null value
       createdAt: insertUser.createdAt || new Date() 
     };
     this.users.set(id, user);

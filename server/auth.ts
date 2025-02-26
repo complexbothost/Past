@@ -28,6 +28,27 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
+/**
+ * Extract the real client IP address from request
+ * Handles proxy cases by checking X-Forwarded-For header
+ */
+function getClientIP(req: Express.Request): string {
+  // Get the forwarded IP from the X-Forwarded-For header if it exists
+  const forwarded = req.headers['x-forwarded-for'];
+
+  if (forwarded) {
+    // X-Forwarded-For can contain multiple IPs, we want the first one (client IP)
+    if (typeof forwarded === 'string') {
+      return forwarded.split(',')[0].trim();
+    } else if (Array.isArray(forwarded) && forwarded.length > 0) {
+      return forwarded[0].split(',')[0].trim();
+    }
+  }
+
+  // Fall back to req.ip if no forwarded header
+  return req.ip || '127.0.0.1';
+}
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dox-nightmare-secret-key",
@@ -78,10 +99,13 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Username already exists" });
       }
 
+      // Get the real client IP address
+      const clientIP = getClientIP(req);
+
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
-        ipAddress: req.ip,
+        ipAddress: clientIP,
       });
 
       req.login(user, (err) => {
