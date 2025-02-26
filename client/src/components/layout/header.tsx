@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileText, LogOut, Shield, Plus, Users, Code, User, Menu } from "lucide-react";
+import { FileText, LogOut, Shield, Plus, Users, Code, User, Menu, FileTerminal } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import PasteForm from "@/components/paste-form";
@@ -54,6 +54,12 @@ export default function Header() {
           Users
         </Button>
       </Link>
+      <Link href="/tos">
+        <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10">
+          <FileTerminal className="h-4 w-4 mr-2" />
+          Terms of Service
+        </Button>
+      </Link>
     </>
   );
 
@@ -62,10 +68,10 @@ export default function Header() {
       <div className="container max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-700">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-zinc-600 to-zinc-800">
               <Code className="h-4 w-4 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-white/70 text-transparent bg-clip-text">
+            <span className="text-xl font-bold text-white">
               DoxNightmare
             </span>
           </Link>
@@ -100,7 +106,7 @@ export default function Header() {
 
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="gap-2 hidden md:flex bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-0">
+              <Button size="sm" className="gap-2 hidden md:flex bg-zinc-800 hover:bg-zinc-700 border border-white/10">
                 <Plus className="h-4 w-4" />
                 New Paste
               </Button>
@@ -120,7 +126,7 @@ export default function Header() {
                   {user.avatarUrl ? (
                     <AvatarImage src={user.avatarUrl} alt={user.username} />
                   ) : (
-                    <AvatarFallback className="bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-white">
+                    <AvatarFallback className="bg-zinc-800 text-white">
                       {user.username.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   )}
@@ -148,6 +154,10 @@ export default function Header() {
               <DropdownMenuItem onClick={() => setCreateDialogOpen(true)} className="md:hidden text-white/70 hover:text-white focus:text-white">
                 <Plus className="mr-2 h-4 w-4" />
                 <span>New Paste</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/tos")} className="text-white/70 hover:text-white focus:text-white">
+                <FileTerminal className="mr-2 h-4 w-4" />
+                <span>Terms of Service</span>
               </DropdownMenuItem>
               {user.isAdmin && (
                 <DropdownMenuItem onClick={() => navigate("/admin")} className="text-white/70 hover:text-white focus:text-white">

@@ -64,12 +64,12 @@ export default function HomePage() {
           </h1>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 bg-zinc-800 hover:bg-zinc-700 border border-white/10">
                 <Plus className="h-4 w-4" />
                 New Paste
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px]">
+            <DialogContent className="sm:max-w-[550px] bg-zinc-900 border-white/10">
               <DialogHeader>
                 <DialogTitle>Create New Paste</DialogTitle>
               </DialogHeader>
@@ -79,16 +79,16 @@ export default function HomePage() {
         </div>
 
         <Tabs defaultValue="public" className="w-full">
-          <TabsList className="grid grid-cols-3 mb-8">
-            <TabsTrigger value="public" className="flex items-center gap-2">
+          <TabsList className="grid grid-cols-3 mb-8 bg-zinc-900/70">
+            <TabsTrigger value="public" className="flex items-center gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-white">
               <ScrollText className="h-4 w-4" />
               Public Pastes
             </TabsTrigger>
-            <TabsTrigger value="my-pastes" className="flex items-center gap-2">
+            <TabsTrigger value="my-pastes" className="flex items-center gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-white">
               <User className="h-4 w-4" />
               My Pastes
             </TabsTrigger>
-            <TabsTrigger value="clown" className="flex items-center gap-2">
+            <TabsTrigger value="clown" className="flex items-center gap-2 data-[state=active]:bg-zinc-800 data-[state=active]:text-white">
               <FileText className="h-4 w-4" />
               Clown Pastes
             </TabsTrigger>
@@ -97,10 +97,10 @@ export default function HomePage() {
           <TabsContent value="public" className="pt-2">
             {publicPastesLoading ? (
               <div className="flex justify-center py-12">
-                <div className="h-8 w-8 text-primary">Loading...</div>
+                <div className="h-8 w-8 text-white">Loading...</div>
               </div>
             ) : publicPastesError ? (
-              <div className="text-center py-8 text-destructive">Error loading pastes</div>
+              <div className="text-center py-8 text-red-400">Error loading pastes</div>
             ) : publicPastes && publicPastes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {publicPastes.map((paste) => (
@@ -112,7 +112,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-white/50">
                 No public pastes available yet. Be the first to create one!
               </div>
             )}
@@ -121,10 +121,10 @@ export default function HomePage() {
           <TabsContent value="my-pastes" className="pt-2">
             {userPastesLoading ? (
               <div className="flex justify-center py-12">
-                <div className="h-8 w-8 text-primary">Loading...</div>
+                <div className="h-8 w-8 text-white">Loading...</div>
               </div>
             ) : userPastesError ? (
-              <div className="text-center py-8 text-destructive">Error loading your pastes</div>
+              <div className="text-center py-8 text-red-400">Error loading your pastes</div>
             ) : userPastes && userPastes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {userPastes.map((paste) => (
@@ -137,7 +137,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-white/50">
                 You haven't created any pastes yet.
               </div>
             )}
@@ -146,10 +146,10 @@ export default function HomePage() {
           <TabsContent value="clown" className="pt-2">
             {clownPastesLoading ? (
               <div className="flex justify-center py-12">
-                <div className="h-8 w-8 text-primary">Loading...</div>
+                <div className="h-8 w-8 text-white">Loading...</div>
               </div>
             ) : clownPastesError ? (
-              <div className="text-center py-8 text-destructive">Error loading clown pastes</div>
+              <div className="text-center py-8 text-red-400">Error loading clown pastes</div>
             ) : clownPastes && clownPastes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {clownPastes.map((paste) => (
@@ -162,7 +162,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-white/50">
                 No clown pastes available yet.
               </div>
             )}
