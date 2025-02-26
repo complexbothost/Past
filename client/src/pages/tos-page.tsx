@@ -18,7 +18,7 @@ export default function TOSPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" /> 
-              DoxNightmare Terms of Service
+              Pastebin Terms of Service
             </CardTitle>
             <CardDescription>
               Last Updated: February 26, 2025
@@ -26,19 +26,19 @@ export default function TOSPage() {
           </CardHeader>
           <CardContent className="prose prose-invert max-w-none">
             <p className="text-white/80 leading-relaxed">
-              Welcome to DoxNightmare. By accessing and using our platform, you agree to comply with and be bound by the following terms and conditions.
+              Welcome to Pastebin. By accessing and using our platform, you agree to comply with and be bound by the following terms and conditions.
             </p>
 
             <Separator className="my-6 bg-white/10" />
 
             <h2 className="text-xl font-semibold text-white mb-4">1. Acceptance of Terms</h2>
             <p className="text-white/80 leading-relaxed mb-4">
-              By accessing or using DoxNightmare, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
+              By accessing or using Pastebin, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.
             </p>
 
             <h2 className="text-xl font-semibold text-white mb-4">2. User Responsibilities</h2>
             <p className="text-white/80 leading-relaxed mb-4">
-              Users are responsible for all content they post on the platform. You agree not to use DoxNightmare to:
+              Users are responsible for all content they post on the platform. You agree not to use Pastebin to:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-white/80 mb-4">
               <li>Any paste directed to any user under the age of 14 is against our TOS</li>
@@ -48,12 +48,12 @@ export default function TOSPage() {
 
             <h2 className="text-xl font-semibold text-white mb-4">3. Content Rights and Ownership</h2>
             <p className="text-white/80 leading-relaxed mb-4">
-              Users retain ownership of all content they post to the platform. However, by posting content, you grant DoxNightmare a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, and display the content in connection with providing the service.
+              Users retain ownership of all content they post to the platform. However, by posting content, you grant Pastebin a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, and display the content in connection with providing the service.
             </p>
 
             <h2 className="text-xl font-semibold text-white mb-4">4. Privacy</h2>
             <p className="text-white/80 leading-relaxed mb-4">
-              Our Privacy Policy describes how we collect, use, and disclose information about you when you use our platform. By using DoxNightmare, you agree to our collection and use of information as outlined in the Privacy Policy.
+              Our Privacy Policy describes how we collect, use, and disclose information about you when you use our platform. By using Pastebin, you agree to our collection and use of information as outlined in the Privacy Policy.
             </p>
 
             <h2 className="text-xl font-semibold text-white mb-4">5. Account Security</h2>
@@ -67,7 +67,7 @@ export default function TOSPage() {
 
             <h2 className="text-xl font-semibold text-white mb-4">8. Disclaimer of Warranties</h2>
             <p className="text-white/80 leading-relaxed mb-4">
-              DoxNightmare is provided "as is" without warranties of any kind, either express or implied. We do not guarantee that the platform will be error-free or uninterrupted.
+              Pastebin is provided "as is" without warranties of any kind, either express or implied. We do not guarantee that the platform will be error-free or uninterrupted.
             </p>
 
             <h2 className="text-xl font-semibold text-white mb-4">9. legalities</h2>

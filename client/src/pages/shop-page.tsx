@@ -25,7 +25,7 @@ export default function ShopPage() {
     <PageLayout>
       <div className="container mx-auto py-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">DoxNightmare Shop</h1>
+          <h1 className="text-3xl font-bold mb-2">Pastebin Shop</h1>
           <p className="text-muted-foreground">
             Purchase premium roles and special paste features
           </p>

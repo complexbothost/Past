@@ -742,7 +742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     // Send initial connection acknowledgment
-    ws.send(JSON.stringify({ type: 'connection', status: 'connected', message: 'Welcome to DoxNightmare!' }));
+    ws.send(JSON.stringify({ type: 'connection', status: 'connected', message: 'Welcome to Pastebin!' }));
   });
 
   return httpServer;

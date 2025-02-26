@@ -87,7 +87,7 @@ export default function HomePage() {
       <div className="container mx-auto py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-white">
-            DoxNightmare
+            Pastebin
           </h1>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>

@@ -35,10 +35,10 @@ export default function PageLayout({ children }: PageLayoutProps) {
                   <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
               </div>
-              <p className="text-sm font-medium text-white/70">DoxNightmare</p>
+              <p className="text-sm font-medium text-white/70">Pastebin</p>
             </div>
             <div className="mt-4 md:mt-0">
-              <p className="text-xs text-white/50">© 2025 DoxNightmare. Secure paste-sharing with role management.</p>
+              <p className="text-xs text-white/50">© 2025 Pastebin. Secure paste-sharing with role management.</p>
             </div>
           </div>
         </footer>

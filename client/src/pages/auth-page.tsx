@@ -7,7 +7,7 @@ import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,7 +89,7 @@ export default function AuthPage() {
             </div>
           </div>
           <h1 className="mb-6 text-5xl font-bold tracking-tight text-white">
-            Dox<span className="text-purple-400">Nightmare</span>
+            Paste<span className="text-purple-400">bin</span>
           </h1>
           <p className="mb-8 text-xl text-white/80 leading-relaxed">
             Share code snippets, text, and pastes securely with role-based access control and advanced management features.
@@ -197,7 +197,7 @@ export default function AuthPage() {
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-white">Create Account</CardTitle>
                 <CardDescription className="text-white/70">
-                  Join DoxNightmare to share and manage your pastes
+                  Join Pastebin to share and manage your pastes
                 </CardDescription>
               </CardHeader>
               <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)}>
