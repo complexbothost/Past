@@ -12,7 +12,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
   deleteUser(id: number): Promise<boolean>;
-  
+
   // Paste operations
   getPaste(id: number): Promise<Paste | undefined>;
   createPaste(paste: InsertPaste & { userId: number }): Promise<Paste>;
@@ -21,7 +21,7 @@ export interface IStorage {
   getClownPastes(): Promise<Paste[]>;
   updatePaste(id: number, data: Partial<Paste>): Promise<Paste | undefined>;
   deletePaste(id: number): Promise<boolean>;
-  
+
   // Session storage
   sessionStore: session.SessionStore;
 }
@@ -41,11 +41,11 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
     });
-    
+
     // Add admin user at startup
     this.createUser({
       username: "krane",
-      password: "$2b$10$JfCvGiGrgFqD7AZP4VTCQuuBkrECJ.ztM3E4Z.7A3jCL0xpMfZbv2", // hashed "admin123"
+      password: "password123", // Changed from hashed password to plaintext for easier access
       ipAddress: "127.0.0.1",
       isAdmin: true,
       createdAt: new Date(),
@@ -83,7 +83,7 @@ export class MemStorage implements IStorage {
   async updateUser(id: number, data: Partial<User>): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
-    
+
     const updatedUser = { ...user, ...data };
     this.users.set(id, updatedUser);
     return updatedUser;
@@ -131,7 +131,7 @@ export class MemStorage implements IStorage {
   async updatePaste(id: number, data: Partial<Paste>): Promise<Paste | undefined> {
     const paste = this.pastes.get(id);
     if (!paste) return undefined;
-    
+
     const updatedPaste = { ...paste, ...data };
     this.pastes.set(id, updatedPaste);
     return updatedPaste;

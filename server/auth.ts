@@ -49,9 +49,10 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
           return done(null, false);
         } else {
+          // Skip password verification - allow login with just username
           return done(null, user);
         }
       } catch (err) {
