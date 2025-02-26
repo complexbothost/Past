@@ -174,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pastes = await storage.getUserPastes(id);
       // Filter out private pastes unless the requester is the owner or admin
       const filteredPastes = pastes.filter(paste => {
-        return !paste.isPrivate || 
+        return !paste.isPrivate ||
                 (req.user && (req.user.id === paste.userId || req.user.isAdmin));
       });
 
@@ -230,8 +230,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // New endpoint: Add comment to user profile
-  app.post("/api/users/:id/comments", isAuthenticated, async (req, res) => {
+  // New endpoint: Add comment to user profile - Removed authentication requirement
+  app.post("/api/users/:id/comments", async (req, res) => {
     try {
       const profileUserId = parseInt(req.params.id);
       if (isNaN(profileUserId)) {
@@ -243,9 +243,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileUserId
       });
 
+      // If user is not logged in, set userId to 0 (anonymous)
+      const userId = req.user ? req.user.id : 0;
+
       const comment = await storage.createComment({
         ...commentData,
-        userId: req.user!.id
+        userId
       });
 
       res.status(201).json(comment);

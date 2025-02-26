@@ -65,28 +65,6 @@ export default function UserProfilePage() {
     queryKey: [`/api/users/${userId}/comments`],
   });
 
-  // Update bio mutation
-  const updateBioMutation = useMutation({
-    mutationFn: async (data: { bio: string }) => {
-      const res = await apiRequest("PATCH", `/api/users/${userId}/bio`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Bio updated",
-        description: "Your bio has been updated successfully",
-      });
-      refetchUser();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update bio",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Add comment mutation
   const addCommentMutation = useMutation({
     mutationFn: async (data: { content: string }) => {
@@ -110,14 +88,6 @@ export default function UserProfilePage() {
     },
   });
 
-  // Bio form
-  const bioForm = useForm<z.infer<typeof bioFormSchema>>({
-    resolver: zodResolver(bioFormSchema),
-    defaultValues: {
-      bio: profileUser?.bio || "",
-    },
-  });
-
   // Comment form
   const commentForm = useForm<z.infer<typeof commentFormSchema>>({
     resolver: zodResolver(commentFormSchema),
@@ -125,17 +95,6 @@ export default function UserProfilePage() {
       content: "",
     },
   });
-
-  // Update form defaults when user data loads
-  useState(() => {
-    if (profileUser) {
-      bioForm.reset({ bio: profileUser.bio || "" });
-    }
-  }, [profileUser]);
-
-  const onBioSubmit = (data: z.infer<typeof bioFormSchema>) => {
-    updateBioMutation.mutate(data);
-  };
 
   const onCommentSubmit = (data: z.infer<typeof commentFormSchema>) => {
     addCommentMutation.mutate(data);
@@ -260,35 +219,34 @@ export default function UserProfilePage() {
                 <CardTitle className="text-xl">Comments</CardTitle>
               </CardHeader>
               <CardContent>
-                {user && (
-                  <Form {...commentForm}>
-                    <form onSubmit={commentForm.handleSubmit(onCommentSubmit)} className="space-y-4 mb-6">
-                      <FormField
-                        control={commentForm.control}
-                        name="content"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Leave a comment..." 
-                                className="resize-none"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button 
-                        type="submit" 
-                        size="sm"
-                        disabled={addCommentMutation.isPending}
-                      >
-                        {addCommentMutation.isPending ? "Posting..." : "Post Comment"}
-                      </Button>
-                    </form>
-                  </Form>
-                )}
+                {/* Comment form - now available to everyone */}
+                <Form {...commentForm}>
+                  <form onSubmit={commentForm.handleSubmit(onCommentSubmit)} className="space-y-4 mb-6">
+                    <FormField
+                      control={commentForm.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Leave a comment..." 
+                              className="resize-none"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button 
+                      type="submit" 
+                      size="sm"
+                      disabled={addCommentMutation.isPending}
+                    >
+                      {addCommentMutation.isPending ? "Posting..." : "Post Comment"}
+                    </Button>
+                  </form>
+                </Form>
 
                 {isCommentsLoading ? (
                   <div className="py-4 text-center">
@@ -305,12 +263,11 @@ export default function UserProfilePage() {
                         <div className="flex items-center gap-2 mb-2">
                           <Avatar className="h-6 w-6">
                             <AvatarFallback className="bg-zinc-800 text-white text-xs">
-                              {/* Would need a way to get the commenter's username */}
-                              U
+                              {comment.userId === 0 ? 'A' : 'U'}
                             </AvatarFallback>
                           </Avatar>
                           <div className="text-xs text-zinc-400">
-                            User #{comment.userId} • {format(new Date(comment.createdAt), "MMM d, yyyy")}
+                            {comment.userId === 0 ? 'Anonymous' : `User #${comment.userId}`} • {format(new Date(comment.createdAt), "MMM d, yyyy")}
                           </div>
                         </div>
                         <p className="text-sm text-zinc-300">{comment.content}</p>
