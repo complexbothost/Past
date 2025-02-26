@@ -10,7 +10,7 @@ export default function RestrictedPage() {
   return (
     <PageLayout>
       <div className="container mx-auto py-16 flex justify-center">
-        <Card className="max-w-lg w-full bg-zinc-900/70 border-white/5">
+        <Card className="max-w-lg w-full bg-black border-white/5">
           <CardHeader className="text-center">
             <div className="mx-auto p-3 rounded-full bg-red-500/10 mb-4 w-fit">
               <ShieldAlert className="h-12 w-12 text-red-500" />
@@ -31,7 +31,7 @@ export default function RestrictedPage() {
             </p>
           </CardContent>
           <CardFooter className="flex justify-center pb-8">
-            <Button variant="outline" onClick={() => navigate("/")}>
+            <Button variant="outline" className="bg-black border-white/10 hover:bg-zinc-900" onClick={() => navigate("/")}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Return to Home
             </Button>
           </CardFooter>

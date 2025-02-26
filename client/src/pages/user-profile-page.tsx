@@ -173,9 +173,9 @@ export default function UserProfilePage() {
       <PageLayout>
         <div className="container max-w-7xl mx-auto py-16 flex justify-center">
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-full bg-zinc-800/50 animate-pulse"></div>
-            <div className="h-8 w-48 bg-zinc-800/50 rounded mt-4 animate-pulse"></div>
-            <div className="h-4 w-24 bg-zinc-800/50 rounded mt-2 animate-pulse"></div>
+            <div className="w-24 h-24 rounded-full bg-black/50 border border-white/5 animate-pulse"></div>
+            <div className="h-8 w-48 bg-black/50 border border-white/5 rounded mt-4 animate-pulse"></div>
+            <div className="h-4 w-24 bg-black/50 border border-white/5 rounded mt-2 animate-pulse"></div>
           </div>
         </div>
       </PageLayout>
@@ -188,12 +188,12 @@ export default function UserProfilePage() {
         <div className="container max-w-7xl mx-auto py-8 px-4">
           <Button 
             variant="outline" 
-            className="mb-6 border-white/10 text-white/70 hover:bg-white/5" 
+            className="mb-6 border-white/10 text-white/70 hover:bg-black hover:text-white bg-black" 
             onClick={() => navigate("/")}
           >
             <ChevronLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Card className="border-white/10 bg-zinc-900/50 backdrop-blur-md">
+          <Card className="border-white/10 bg-black">
             <CardContent className="pt-6">
               <div className="text-center py-8 text-red-400">
                 {userError ? "Error loading user profile" : "User not found"}
@@ -212,7 +212,7 @@ export default function UserProfilePage() {
       <div className="container max-w-7xl mx-auto py-8 px-4">
         <Button 
           variant="outline" 
-          className="mb-6 border-white/10 text-white/70 hover:bg-white/5" 
+          className="mb-6 border-white/10 text-white/70 hover:bg-black hover:text-white bg-black" 
           onClick={() => navigate("/")}
         >
           <ChevronLeft className="mr-2 h-4 w-4" /> Back
@@ -221,16 +221,16 @@ export default function UserProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* User Profile Card */}
           <div className="lg:col-span-1">
-            <Card className="border-white/10 bg-zinc-900/50 backdrop-blur-md overflow-hidden">
-              <div className="h-24 bg-gradient-to-r from-purple-600/20 to-indigo-600/20"></div>
+            <Card className="border-white/10 bg-black overflow-hidden">
+              <div className="h-24 bg-gradient-to-r from-purple-600/10 to-indigo-600/10"></div>
               <div className="-mt-12 px-6">
                 <div className="flex justify-center">
                   <div className="relative">
-                    <Avatar className="h-24 w-24 border-4 border-zinc-900">
+                    <Avatar className="h-24 w-24 border-4 border-black">
                       {profileUser.avatarUrl ? (
                         <AvatarImage src={profileUser.avatarUrl} alt={profileUser.username} />
                       ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-purple-600/30 to-indigo-600/30 text-white text-2xl">
+                        <AvatarFallback className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 text-white text-2xl">
                           {profileUser.username.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       )}
@@ -298,7 +298,7 @@ export default function UserProfilePage() {
                               <FormControl>
                                 <Textarea 
                                   placeholder="Tell us about yourself..." 
-                                  className="resize-none bg-zinc-800 border-white/10 text-white"
+                                  className="resize-none bg-black border-white/10 text-white"
                                   {...field} 
                                 />
                               </FormControl>
@@ -312,7 +312,7 @@ export default function UserProfilePage() {
                             variant="outline"
                             size="sm"
                             onClick={() => setIsEditingBio(false)}
-                            className="border-white/10 text-white/70 hover:bg-white/5"
+                            className="border-white/10 text-white/70 hover:bg-white/5 bg-black"
                           >
                             Cancel
                           </Button>
@@ -337,7 +337,7 @@ export default function UserProfilePage() {
             </Card>
 
             {/* Comments section */}
-            <Card className="mt-6 border-white/10 bg-zinc-900/50 backdrop-blur-md">
+            <Card className="mt-6 border-white/10 bg-black">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-purple-400" />
@@ -356,7 +356,7 @@ export default function UserProfilePage() {
                           <FormControl>
                             <Textarea 
                               placeholder="Leave a comment..." 
-                              className="resize-none bg-zinc-800 border-white/10 text-white"
+                              className="resize-none bg-black border-white/10 text-white"
                               {...field} 
                             />
                           </FormControl>
@@ -379,10 +379,10 @@ export default function UserProfilePage() {
                   <div className="py-4 space-y-4">
                     {[...Array(3)].map((_, i) => (
                       <div key={i} className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-zinc-800/50 animate-pulse"></div>
+                        <div className="w-8 h-8 rounded-full bg-black/50 border border-white/5 animate-pulse"></div>
                         <div className="flex-1 space-y-2">
-                          <div className="h-4 w-24 bg-zinc-800/50 rounded animate-pulse"></div>
-                          <div className="h-16 bg-zinc-800/50 rounded animate-pulse"></div>
+                          <div className="h-4 w-24 bg-black/50 border border-white/5 rounded animate-pulse"></div>
+                          <div className="h-16 bg-black/50 border border-white/5 rounded animate-pulse"></div>
                         </div>
                       </div>
                     ))}
@@ -416,7 +416,7 @@ export default function UserProfilePage() {
                   </div>
                 ) : (
                   <div className="py-6 text-center">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800/50 mb-3">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black/50 border border-white/10 mb-3">
                       <MessageSquare className="h-6 w-6 text-white/30" />
                     </div>
                     <p className="text-white/50">No comments yet</p>
@@ -428,7 +428,7 @@ export default function UserProfilePage() {
 
           {/* User's pastes */}
           <div className="lg:col-span-3">
-            <Card className="border-white/10 bg-zinc-900/50 backdrop-blur-md">
+            <Card className="border-white/10 bg-black">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-purple-400" />
@@ -441,7 +441,7 @@ export default function UserProfilePage() {
                 {isPastesLoading ? (
                   <div className="grid grid-cols-1 gap-4">
                     {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-28 bg-zinc-800/50 rounded-lg animate-pulse"></div>
+                      <div key={i} className="h-28 bg-black/50 border border-white/5 rounded-lg animate-pulse"></div>
                     ))}
                   </div>
                 ) : pastesError ? (
@@ -461,7 +461,7 @@ export default function UserProfilePage() {
                   </div>
                 ) : (
                   <div className="py-12 text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-zinc-800/50 mb-4">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-black/50 border border-white/10 mb-4">
                       <FileText className="h-8 w-8 text-white/30" />
                     </div>
                     <p className="text-white/50">No pastes found</p>

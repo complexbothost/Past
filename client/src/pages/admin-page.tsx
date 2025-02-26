@@ -331,12 +331,12 @@ export default function AdminPage() {
     if (paste.isPinned) {
       updatePasteMutation.mutate({
         id: paste.id,
-        data: { 
+        data: {
           isPinned: false,
           pinnedUntil: null
         }
       });
-    } 
+    }
     // If not pinned, pin it for 24 hours
     else {
       const pinnedUntil = new Date();
@@ -344,7 +344,7 @@ export default function AdminPage() {
 
       updatePasteMutation.mutate({
         id: paste.id,
-        data: { 
+        data: {
           isPinned: true,
           pinnedUntil: pinnedUntil
         }
@@ -355,7 +355,7 @@ export default function AdminPage() {
   const handleToggleAdminPaste = (paste: Paste) => {
     updatePasteMutation.mutate({
       id: paste.id,
-      data: { 
+      data: {
         isAdminPaste: !paste.isAdminPaste,
         // If turning on admin paste, also include any existing extraDetails
         extraDetails: paste.extraDetails || ""
@@ -434,27 +434,27 @@ export default function AdminPage() {
         </div>
 
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-8">
-            <TabsTrigger value="users" className="flex items-center gap-2">
+          <TabsList className="grid grid-cols-4 mb-8 bg-black border border-white/10">
+            <TabsTrigger value="users" className="flex items-center gap-2 data-[state=active]:bg-black">
               <Users className="h-4 w-4" />
               Users
             </TabsTrigger>
-            <TabsTrigger value="pastes" className="flex items-center gap-2">
+            <TabsTrigger value="pastes" className="flex items-center gap-2 data-[state=active]:bg-black">
               <FileText className="h-4 w-4" />
               Pastes
             </TabsTrigger>
-            <TabsTrigger value="ip-restrictions" className="flex items-center gap-2">
+            <TabsTrigger value="ip-restrictions" className="flex items-center gap-2 data-[state=active]:bg-black">
               <ShieldBan className="h-4 w-4" />
               IP Restrictions
             </TabsTrigger>
-            <TabsTrigger value="audit-logs" className="flex items-center gap-2">
+            <TabsTrigger value="audit-logs" className="flex items-center gap-2 data-[state=active]:bg-black">
               <ClipboardList className="h-4 w-4" />
               Audit Logs
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users" className="pt-2">
-            <Card>
+            <Card className="bg-black border-white/10">
               <CardHeader>
                 <CardTitle>User Management</CardTitle>
                 <CardDescription>
@@ -470,7 +470,7 @@ export default function AdminPage() {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="border-white/10">
                           <TableHead>ID</TableHead>
                           <TableHead>Username</TableHead>
                           <TableHead>IP Address</TableHead>
@@ -481,7 +481,7 @@ export default function AdminPage() {
                       </TableHeader>
                       <TableBody>
                         {users.map((u) => (
-                          <TableRow key={u.id}>
+                          <TableRow key={u.id} className="border-white/5">
                             <TableCell>{u.id}</TableCell>
                             <TableCell className="font-medium">
                               <Button
@@ -516,10 +516,10 @@ export default function AdminPage() {
                                   });
                                 }}
                               >
-                                <SelectTrigger className="w-32">
+                                <SelectTrigger className="w-32 bg-black border-white/10">
                                   <SelectValue placeholder="Select role" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-black border-white/10">
                                   <SelectItem value="none">No Role</SelectItem>
                                   <SelectItem value={UserRole.RICH}>Rich</SelectItem>
                                   <SelectItem value={UserRole.FRAUD}>Fraud</SelectItem>
@@ -533,6 +533,7 @@ export default function AdminPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="bg-black border-white/10 hover:bg-zinc-900"
                                   onClick={() => navigateToUserProfile(u.id)}
                                 >
                                   <UserIcon className="h-4 w-4 mr-1" /> Profile
@@ -545,7 +546,7 @@ export default function AdminPage() {
                                         <UserX className="h-4 w-4 mr-1" /> Delete
                                       </Button>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent>
+                                    <AlertDialogContent className="bg-black border-white/10">
                                       <AlertDialogHeader>
                                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
@@ -553,7 +554,7 @@ export default function AdminPage() {
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogCancel className="bg-black border-white/10 hover:bg-zinc-900">Cancel</AlertDialogCancel>
                                         <AlertDialogAction onClick={() => handleDeleteUser(u.id)}>
                                           Delete
                                         </AlertDialogAction>
@@ -578,7 +579,7 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="pastes" className="pt-2">
-            <Card>
+            <Card className="bg-black border-white/10">
               <CardHeader>
                 <CardTitle>Paste Management</CardTitle>
                 <CardDescription>
@@ -594,7 +595,7 @@ export default function AdminPage() {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="border-white/10">
                           <TableHead>ID</TableHead>
                           <TableHead>Title</TableHead>
                           <TableHead>User ID</TableHead>
@@ -607,7 +608,7 @@ export default function AdminPage() {
                       </TableHeader>
                       <TableBody>
                         {pastes.map((p) => (
-                          <TableRow key={p.id}>
+                          <TableRow key={p.id} className="border-white/5">
                             <TableCell>{p.id}</TableCell>
                             <TableCell className="font-medium">{p.title}</TableCell>
                             <TableCell>
@@ -621,11 +622,11 @@ export default function AdminPage() {
                             </TableCell>
                             <TableCell>
                               {p.isPrivate ? (
-                                <Badge variant="outline" className="bg-zinc-900 text-white">
+                                <Badge variant="outline" className="bg-black text-white border-white/10">
                                   Private
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="bg-zinc-900 text-white">
+                                <Badge variant="outline" className="bg-black text-white border-white/10">
                                   Public
                                 </Badge>
                               )}
@@ -656,7 +657,7 @@ export default function AdminPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleTogglePin(p)}
-                                    className="flex items-center gap-1"
+                                    className="flex items-center gap-1 bg-black border-white/10 hover:bg-zinc-900"
                                   >
                                     <PinOff className="h-4 w-4" /> Unpin
                                   </Button>
@@ -665,7 +666,7 @@ export default function AdminPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleTogglePin(p)}
-                                    className="flex items-center gap-1"
+                                    className="flex items-center gap-1 bg-black border-white/10 hover:bg-zinc-900"
                                   >
                                     <Pin className="h-4 w-4" /> Pin (24h)
                                   </Button>
@@ -677,18 +678,18 @@ export default function AdminPage() {
                               <div className="flex gap-2">
                                 <Dialog>
                                   <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" onClick={() => setSelectedPaste(p)}>
+                                    <Button variant="outline" size="sm" onClick={() => setSelectedPaste(p)} className="bg-black border-white/10 hover:bg-zinc-900">
                                       <Eye className="h-4 w-4" />
                                     </Button>
                                   </DialogTrigger>
-                                  <DialogContent>
+                                  <DialogContent className="bg-black border-white/10">
                                     <DialogHeader>
                                       <DialogTitle>{selectedPaste?.title}</DialogTitle>
                                       <DialogDescription>
                                         Paste ID: {selectedPaste?.id} | User ID: {selectedPaste?.userId}
                                       </DialogDescription>
                                     </DialogHeader>
-                                    <div className="bg-zinc-900 p-4 rounded-md border border-zinc-800 mt-2 max-h-[400px] overflow-y-auto">
+                                    <div className="bg-black p-4 rounded-md border border-white/10 mt-2 max-h-[400px] overflow-y-auto">
                                       <pre className="text-sm whitespace-pre-wrap break-words text-white">
                                         {selectedPaste?.content}
                                       </pre>
@@ -696,7 +697,7 @@ export default function AdminPage() {
                                   </DialogContent>
                                 </Dialog>
 
-                                <Button variant="outline" size="sm" asChild>
+                                <Button variant="outline" size="sm" asChild className="bg-black border-white/10 hover:bg-zinc-900">
                                   <a href={`/paste/${p.id}`} target="_blank" rel="noopener noreferrer">
                                     <Link className="h-4 w-4" />
                                   </a>
@@ -706,6 +707,7 @@ export default function AdminPage() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleEditPaste(p)}
+                                  className="bg-black border-white/10 hover:bg-zinc-900"
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -716,7 +718,7 @@ export default function AdminPage() {
                                       <UserX className="h-4 w-4" />
                                     </Button>
                                   </AlertDialogTrigger>
-                                  <AlertDialogContent>
+                                  <AlertDialogContent className="bg-black border-white/10">
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                       <AlertDialogDescription>
@@ -724,7 +726,7 @@ export default function AdminPage() {
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogCancel className="bg-black border-white/10 hover:bg-zinc-900">Cancel</AlertDialogCancel>
                                       <AlertDialogAction onClick={() => handleDeletePaste(p.id)}>
                                         Delete
                                       </AlertDialogAction>
@@ -749,7 +751,7 @@ export default function AdminPage() {
 
           {/* IP Restrictions Tab */}
           <TabsContent value="ip-restrictions" className="pt-2">
-            <Card>
+            <Card className="bg-black border-white/10">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>IP Restrictions</CardTitle>
@@ -759,12 +761,12 @@ export default function AdminPage() {
                 </div>
                 <Dialog open={isAddIPDialogOpen} onOpenChange={setIsAddIPDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" className="bg-zinc-800 hover:bg-zinc-700 border border-white/10">
+                    <Button variant="outline" className="bg-black hover:bg-zinc-900 border border-white/10">
                       <ShieldBan className="h-4 w-4 mr-2" />
                       Restrict IP
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="bg-black border-white/10">
                     <DialogHeader>
                       <DialogTitle>Restrict IP Address</DialogTitle>
                       <DialogDescription>
@@ -782,6 +784,7 @@ export default function AdminPage() {
                               <FormControl>
                                 <Input
                                   placeholder="127.0.0.1"
+                                  className="bg-black border-white/10"
                                   {...field}
                                 />
                               </FormControl>
@@ -798,6 +801,7 @@ export default function AdminPage() {
                               <FormControl>
                                 <Textarea
                                   placeholder="Reason for IP restriction..."
+                                  className="bg-black border-white/10"
                                   {...field}
                                 />
                               </FormControl>
@@ -810,11 +814,13 @@ export default function AdminPage() {
                             type="button"
                             variant="outline"
                             onClick={() => setIsAddIPDialogOpen(false)}
+                            className="bg-black border-white/10 hover:bg-zinc-900"
                           >
                             Cancel
                           </Button>
                           <Button
                             type="submit"
+                            className="bg-purple-600 hover:bg-purple-700 text-white"
                             disabled={addIPRestrictionMutation.isPending}
                           >
                             {addIPRestrictionMutation.isPending ? "Restricting..." : "Restrict IP"}
@@ -834,7 +840,7 @@ export default function AdminPage() {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="border-white/10">
                           <TableHead>IP Address</TableHead>
                           <TableHead>Reason</TableHead>
                           <TableHead>Restricted By</TableHead>
@@ -844,7 +850,7 @@ export default function AdminPage() {
                       </TableHeader>
                       <TableBody>
                         {restrictedIPs.map((ip) => (
-                          <TableRow key={ip.ip}>
+                          <TableRow key={ip.ip} className="border-white/5">
                             <TableCell className="font-mono">{ip.ip}</TableCell>
                             <TableCell>{ip.reason}</TableCell>
                             <TableCell>
@@ -860,11 +866,11 @@ export default function AdminPage() {
                             <TableCell>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm">
+                                  <Button variant="outline" size="sm" className="bg-black border-white/10 hover:bg-zinc-900">
                                     <LockOpen className="h-4 w-4 mr-1" /> Remove Restriction
                                   </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
+                                <AlertDialogContent className="bg-black border-white/10">
                                   <AlertDialogHeader>
                                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                     <AlertDialogDescription>
@@ -872,7 +878,7 @@ export default function AdminPage() {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel className="bg-black border-white/10 hover:bg-zinc-900">Cancel</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => handleRemoveIPRestriction(ip.ip)}>
                                       Remove Restriction
                                     </AlertDialogAction>
@@ -896,7 +902,7 @@ export default function AdminPage() {
 
           {/* New Audit Logs Tab */}
           <TabsContent value="audit-logs" className="pt-2">
-            <Card>
+            <Card className="bg-black border-white/10">
               <CardHeader>
                 <CardTitle>Audit Logs</CardTitle>
                 <CardDescription>
@@ -905,33 +911,34 @@ export default function AdminPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2 mb-6">
-                  <Button 
+                  <Button
                     variant={selectedAuditLogType === "all" ? "default" : "outline"}
                     onClick={() => setSelectedAuditLogType("all")}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-black border border-white/10 hover:bg-zinc-900"
                   >
                     <ClipboardList className="h-4 w-4" />
                     All Logs
                   </Button>
-                  <Button 
+                  <Button
                     variant={selectedAuditLogType === "deleted-users" ? "default" : "outline"}
                     onClick={() => setSelectedAuditLogType("deleted-users")}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-black border border-white/10 hover:bg-zinc-900"
                   >
                     <Trash2 className="h-4 w-4" />
                     Deleted Users
                   </Button>
-                  <Button 
+                  <Button
                     variant={selectedAuditLogType === "deleted-pastes" ? "default" : "outline"}
                     onClick={() => setSelectedAuditLogType("deleted-pastes")}
-                    className="flex items-center gap-2">
+                    className="flex items-center gap-2 bg-black border border-white/10 hover:bg-zinc-900"
+                  >
                     <Trash2 className="h-4 w-4" />
                     Deleted Pastes
                   </Button>
-                  <Button 
+                  <Button
                     variant={selectedAuditLogType === "edits" ? "default" : "outline"}
                     onClick={() => setSelectedAuditLogType("edits")}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-black border border-white/10 hover:bg-zinc-900"
                   >
                     <FilePen className="h-4 w-4" />
                     Edit Logs
@@ -940,11 +947,11 @@ export default function AdminPage() {
 
                 {/* Log details dialog */}
                 <Dialog open={!!selectedLogDetails} onOpenChange={(open) => !open && setSelectedLogDetails(null)}>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl bg-black border border-white/10">
                     <DialogHeader>
                       <DialogTitle>Log Details</DialogTitle>
                     </DialogHeader>
-                    <div className="bg-zinc-900 p-4 rounded-md border border-zinc-800 mt-2 max-h-[500px] overflow-y-auto">
+                    <div className="bg-black p-4 rounded-md border border-white/10 mt-2 max-h-[500px] overflow-y-auto">
                       <pre className="text-sm whitespace-pre-wrap break-words text-white">
                         {selectedLogDetails && prettifyJson(selectedLogDetails)}
                       </pre>
@@ -954,9 +961,9 @@ export default function AdminPage() {
 
                 {/* Conditional rendering based on selected log type */}
                 {(selectedAuditLogType === "all" && auditLogsLoading) ||
-                (selectedAuditLogType === "deleted-users" && deletedUsersLogsLoading) ||
-                (selectedAuditLogType === "deleted-pastes" && deletedPastesLogsLoading) ||
-                (selectedAuditLogType === "edits" && editLogsLoading) ? (
+                  (selectedAuditLogType === "deleted-users" && deletedUsersLogsLoading) ||
+                  (selectedAuditLogType === "deleted-pastes" && deletedPastesLogsLoading) ||
+                  (selectedAuditLogType === "edits" && editLogsLoading) ? (
                   <div className="flex justify-center py-12">
                     <div className="h-8 w-8 text-primary">Loading...</div>
                   </div>
@@ -964,7 +971,7 @@ export default function AdminPage() {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="border-white/10">
                           <TableHead>ID</TableHead>
                           <TableHead>Action</TableHead>
                           <TableHead>User ID</TableHead>
@@ -1005,7 +1012,7 @@ export default function AdminPage() {
                           }
 
                           return logs.map((log) => (
-                            <TableRow key={log.id}>
+                            <TableRow key={log.id} className="border-white/5">
                               <TableCell>{log.id}</TableCell>
                               <TableCell>
                                 <Badge variant="outline" className={getActionBadgeColor(log.action)}>
@@ -1028,9 +1035,10 @@ export default function AdminPage() {
                               </TableCell>
                               <TableCell>{formatDate(log.createdAt)}</TableCell>
                               <TableCell>
-                                <Button 
-                                  variant="outline" 
+                                <Button
+                                  variant="outline"
                                   size="sm"
+                                  className="bg-black border border-white/10 hover:bg-zinc-900"
                                   onClick={() => setSelectedLogDetails(log.details || '')}
                                 >
                                   <Eye className="h-4 w-4" />
@@ -1050,7 +1058,7 @@ export default function AdminPage() {
 
         {/* Edit Paste Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl bg-black border border-white/10">
             <DialogHeader>
               <DialogTitle>Edit Paste</DialogTitle>
               <DialogDescription>
@@ -1066,7 +1074,7 @@ export default function AdminPage() {
                     <FormItem>
                       <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="Paste title" {...field} />
+                        <Input placeholder="Paste title" className="bg-black border border-white/10" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1081,7 +1089,7 @@ export default function AdminPage() {
                       <FormControl>
                         <Textarea
                           placeholder="Paste content"
-                          className="h-40"
+                          className="h-40 bg-black border border-white/10"
                           {...field}
                         />
                       </FormControl>
@@ -1161,6 +1169,7 @@ export default function AdminPage() {
                         <FormControl>
                           <Textarea
                             placeholder="Additional details for admin paste..."
+                            className="bg-black border border-white/10"
                             {...field}
                           />
                         </FormControl>
@@ -1174,10 +1183,11 @@ export default function AdminPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setIsEditDialogOpen(false)}
+                    className="bg-black border border-white/10 hover:bg-zinc-900"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={updatePasteMutation.isPending}>
+                  <Button type="submit" disabled={updatePasteMutation.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
                     {updatePasteMutation.isPending ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>

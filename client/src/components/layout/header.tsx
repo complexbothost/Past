@@ -77,11 +77,11 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/5 bg-zinc-900/80 backdrop-blur-lg">
+    <header className="sticky top-0 z-40 border-b border-white/5 bg-black/80 backdrop-blur-lg">
       <div className="container max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-zinc-600 to-zinc-800">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-black to-zinc-800">
               <Code className="h-4 w-4 text-white" />
             </div>
             <span className="text-xl font-bold text-white">
@@ -102,7 +102,7 @@ export default function Header() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="bg-zinc-900 border-white/5">
+            <SheetContent side="left" className="bg-black border-white/5">
               <div className="flex flex-col space-y-4 mt-8">
                 <NavLinks />
                 <Button 
@@ -122,12 +122,12 @@ export default function Header() {
 
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="gap-2 hidden md:flex bg-zinc-800 hover:bg-zinc-700 border border-white/10">
+              <Button size="sm" className="gap-2 hidden md:flex bg-black hover:bg-zinc-900 border border-white/10">
                 <Plus className="h-4 w-4" />
                 New Paste
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px] bg-zinc-900 border-white/10">
+            <DialogContent className="sm:max-w-[550px] bg-black border-white/10">
               <DialogHeader>
                 <DialogTitle>Create New Paste</DialogTitle>
               </DialogHeader>
@@ -142,14 +142,14 @@ export default function Header() {
                   {user.avatarUrl ? (
                     <AvatarImage src={user.avatarUrl} alt={user.username} />
                   ) : (
-                    <AvatarFallback className="bg-zinc-800 text-white">
+                    <AvatarFallback className="bg-black text-white">
                       {user.username.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   )}
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 bg-zinc-900 border-white/10" align="end">
+            <DropdownMenuContent className="w-56 bg-black border-white/10" align="end">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none text-white">{user.username}</p>
