@@ -3,26 +3,20 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { User, Paste, Comment } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import PageLayout from "@/components/layout/page-layout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import PasteCard from "@/components/paste-card";
-import { ArrowLeft, User as UserIcon, AtSign, Calendar, MessageSquare } from "lucide-react";
+import { Calendar, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
-
-const bioFormSchema = z.object({
-  bio: z.string().max(500, "Bio must be 500 characters or less"),
-});
 
 const commentFormSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment must be 1000 characters or less"),
@@ -40,7 +34,6 @@ export default function UserProfilePage() {
     data: profileUser,
     isLoading: isUserLoading,
     error: userError,
-    refetch: refetchUser
   } = useQuery<User>({
     queryKey: [`/api/users/${userId}`],
   });
@@ -50,7 +43,6 @@ export default function UserProfilePage() {
     data: userPastes,
     isLoading: isPastesLoading,
     error: pastesError,
-    refetch: refetchPastes
   } = useQuery<Paste[]>({
     queryKey: [`/api/users/${userId}/pastes`],
   });
@@ -119,7 +111,7 @@ export default function UserProfilePage() {
       <PageLayout>
         <div className="container mx-auto py-8">
           <Button variant="outline" className="mb-6" onClick={() => navigate("/")}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+            <UserIcon className="mr-2 h-4 w-4" /> Back
           </Button>
           <Card>
             <CardContent className="pt-6">
@@ -133,14 +125,11 @@ export default function UserProfilePage() {
     );
   }
 
-  const isOwnProfile = user?.id === profileUser.id;
-  const isAdmin = user?.isAdmin;
-
   return (
     <PageLayout>
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-8 px-4">
         <Button variant="outline" className="mb-6" onClick={() => navigate("/")}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          <UserIcon className="mr-2 h-4 w-4" /> Back
         </Button>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -175,39 +164,9 @@ export default function UserProfilePage() {
 
                   <div className="border-t border-zinc-800 pt-4">
                     <h3 className="font-medium mb-2">Bio</h3>
-                    {isOwnProfile || isAdmin ? (
-                      <Form {...bioForm}>
-                        <form onSubmit={bioForm.handleSubmit(onBioSubmit)} className="space-y-4">
-                          <FormField
-                            control={bioForm.control}
-                            name="bio"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Textarea 
-                                    placeholder="Tell us about yourself..." 
-                                    className="resize-none h-32"
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <Button 
-                            type="submit" 
-                            size="sm"
-                            disabled={updateBioMutation.isPending}
-                          >
-                            {updateBioMutation.isPending ? "Saving..." : "Save Bio"}
-                          </Button>
-                        </form>
-                      </Form>
-                    ) : (
-                      <p className="text-sm text-zinc-300">
-                        {profileUser.bio || "This user hasn't written a bio yet."}
-                      </p>
-                    )}
+                    <p className="text-sm text-zinc-300">
+                      {profileUser.bio || "This user hasn't written a bio yet."}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -306,7 +265,6 @@ export default function UserProfilePage() {
                       <PasteCard 
                         key={paste.id} 
                         paste={paste} 
-                        onDelete={refetchPastes}
                         showPrivateBadge={true}
                         isClown={paste.isClown}
                       />
