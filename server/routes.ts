@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertPasteSchema, insertCommentSchema, UserRole } from "@shared/schema";
+import { insertPasteSchema, insertCommentSchema, UserRole, updateRoleSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import path from "path";
@@ -258,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate the role update
       const result = updateRoleSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ message: "Invalid role" });
+        return res.status(400).json({ message: "Invalid role", errors: result.error.errors });
       }
 
       const user = await storage.updateUser(id, { role: result.data.role });
@@ -453,11 +453,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(uploadDir));
 
   const httpServer = createServer(app);
-
   return httpServer;
-}
-
-enum UserRole {
-  User = 'user',
-  Admin = 'admin'
 }
