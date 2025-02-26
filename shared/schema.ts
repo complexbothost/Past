@@ -25,6 +25,8 @@ export const AuditLogAction = {
   IP_RESTRICTED: "ip_restricted",
   IP_UNRESTRICTED: "ip_unrestricted",
   ROLE_UPDATED: "role_updated",
+  SUGGESTION_CREATED: "suggestion_created",
+  SUGGESTION_RESPONDED: "suggestion_responded",
 } as const;
 
 // Create a type from the object values
@@ -97,6 +99,29 @@ export const insertCommentSchema = createInsertSchema(comments).pick({
   profileUserId: true,
 });
 
+// Suggestion schema
+export const suggestions = pgTable("suggestions", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  userId: integer("user_id").notNull(),
+  status: text("status").default("pending").notNull(), // pending, approved, rejected, implemented
+  adminResponse: text("admin_response"),
+  adminId: integer("admin_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSuggestionSchema = createInsertSchema(suggestions).pick({
+  title: true,
+  content: true,
+});
+
+export const updateSuggestionResponseSchema = z.object({
+  adminResponse: z.string().min(1, "Response cannot be empty"),
+  status: z.enum(["pending", "approved", "rejected", "implemented"]),
+});
+
 // Audit Log schema
 export const auditLogs = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
@@ -129,3 +154,6 @@ export type UpdateBio = z.infer<typeof updateBioSchema>;
 export type UpdateRole = z.infer<typeof updateRoleSchema>;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertSuggestion = z.infer<typeof insertSuggestionSchema>;
+export type UpdateSuggestionResponse = z.infer<typeof updateSuggestionResponseSchema>;
+export type Suggestion = typeof suggestions.$inferSelect;

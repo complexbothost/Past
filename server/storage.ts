@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, pastes, type Paste, type InsertPaste, comments, type Comment, type InsertComment, type AuditLog, type InsertAuditLog, AuditLogAction } from "@shared/schema";
+import { users, type User, type InsertUser, pastes, type Paste, type InsertPaste, comments, type Comment, type InsertComment, type AuditLog, type InsertAuditLog, AuditLogAction, type InsertSuggestion, type Suggestion, suggestions } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -31,6 +31,13 @@ export interface IStorage {
   createComment(comment: InsertComment & { userId: number }): Promise<Comment>;
   deleteComment(id: number): Promise<boolean>;
 
+  // Suggestion operations
+  createSuggestion(suggestion: InsertSuggestion & { userId: number }): Promise<Suggestion>;
+  getSuggestionById(id: number): Promise<Suggestion | undefined>;
+  getUserSuggestions(userId: number): Promise<Suggestion[]>;
+  getAllSuggestions(): Promise<Suggestion[]>;
+  updateSuggestion(id: number, data: Partial<Suggestion>): Promise<Suggestion | undefined>;
+
   // IP restriction operations
   addRestrictedIP(ip: string, reason: string, restrictedBy: number): Promise<void>;
   removeRestrictedIP(ip: string): Promise<boolean>;
@@ -54,23 +61,27 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private pastes: Map<number, Paste>;
   private comments: Map<number, Comment>;
+  private suggestions: Map<number, Suggestion>;
   private restrictedIPs: Map<string, { ip: string, reason: string, restrictedBy: number, restrictedAt: Date }>;
   private auditLogs: Map<number, AuditLog>;
   sessionStore: SessionStore;
   userCurrentId: number;
   pasteCurrentId: number;
   commentCurrentId: number;
+  suggestionCurrentId: number;
   auditLogCurrentId: number;
 
   constructor() {
     this.users = new Map();
     this.pastes = new Map();
     this.comments = new Map();
+    this.suggestions = new Map();
     this.restrictedIPs = new Map();
     this.auditLogs = new Map();
     this.userCurrentId = 1;
     this.pasteCurrentId = 1;
     this.commentCurrentId = 1;
+    this.suggestionCurrentId = 1;
     this.auditLogCurrentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // prune expired entries every 24h
@@ -344,6 +355,83 @@ export class MemStorage implements IStorage {
     });
 
     return this.comments.delete(id);
+  }
+
+  // Suggestion operations
+  async createSuggestion(insertSuggestion: InsertSuggestion & { userId: number }): Promise<Suggestion> {
+    const id = this.suggestionCurrentId++;
+    const suggestion: Suggestion = {
+      ...insertSuggestion,
+      id,
+      userId: insertSuggestion.userId,
+      status: "pending",
+      adminResponse: null,
+      adminId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.suggestions.set(id, suggestion);
+
+    // Create audit log for suggestion creation
+    this.createAuditLog({
+      action: AuditLogAction.SUGGESTION_CREATED,
+      userId: suggestion.userId,
+      targetId: id,
+      targetType: "suggestion",
+      details: JSON.stringify({ 
+        title: suggestion.title,
+        contentPreview: suggestion.content.substring(0, 50) + (suggestion.content.length > 50 ? '...' : '')
+      }),
+      ipAddress: null,
+    });
+
+    return suggestion;
+  }
+
+  async getSuggestionById(id: number): Promise<Suggestion | undefined> {
+    return this.suggestions.get(id);
+  }
+
+  async getUserSuggestions(userId: number): Promise<Suggestion[]> {
+    return Array.from(this.suggestions.values())
+      .filter(suggestion => suggestion.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getAllSuggestions(): Promise<Suggestion[]> {
+    return Array.from(this.suggestions.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async updateSuggestion(id: number, data: Partial<Suggestion>): Promise<Suggestion | undefined> {
+    const suggestion = this.suggestions.get(id);
+    if (!suggestion) return undefined;
+
+    const oldValues = { ...suggestion };
+    const updatedSuggestion = { 
+      ...suggestion, 
+      ...data,
+      updatedAt: new Date() 
+    };
+    this.suggestions.set(id, updatedSuggestion);
+
+    // Create audit log for suggestion response
+    if (data.adminResponse || data.status) {
+      this.createAuditLog({
+        action: AuditLogAction.SUGGESTION_RESPONDED,
+        userId: data.adminId || 1, // Use the admin ID if provided, otherwise default to 1
+        targetId: id,
+        targetType: "suggestion",
+        details: JSON.stringify({ 
+          oldValues,
+          newValues: data,
+          changes: Object.keys(data)
+        }),
+        ipAddress: null,
+      });
+    }
+
+    return updatedSuggestion;
   }
 
   // IP restriction operations

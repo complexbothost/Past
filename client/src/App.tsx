@@ -12,6 +12,7 @@ import UsersPage from "@/pages/users-page";
 import TOSPage from "@/pages/tos-page";
 import RestrictedPage from "@/pages/restricted-page";
 import ShopPage from "@/pages/shop-page";
+import SuggestionsPage from "@/pages/suggestions-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 import { NotificationProvider } from "@/components/notification-provider";
@@ -22,6 +23,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/paste/:id" component={PastePage} />
       <ProtectedRoute path="/shop" component={ShopPage} />
+      <ProtectedRoute path="/suggestions" component={SuggestionsPage} />
       <Route path="/users" component={UsersPage} />
       <Route path="/user/:id" component={UserProfilePage} />
       <Route path="/tos" component={TOSPage} />
