@@ -299,6 +299,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint: Get all users (public)
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Only send public information
+      const publicUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        bio: user.bio,
+        isAdmin: user.isAdmin,
+        createdAt: user.createdAt
+      }));
+      res.json(publicUsers);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving users" });
+    }
+  });
+
+
   app.delete("/api/admin/users/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

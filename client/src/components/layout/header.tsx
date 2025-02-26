@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { FileText, LogOut, Shield, Menu, Plus } from "lucide-react";
+import { FileText, LogOut, Shield, Plus, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import PasteForm from "@/components/paste-form";
@@ -42,9 +42,19 @@ export default function Header() {
   return (
     <header className="bg-zinc-900 border-b border-zinc-800">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold text-white">
-          DoxNightmare
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="text-xl font-bold text-white">
+            DoxNightmare
+          </Link>
+
+          {/* Added Users link */}
+          <Link href="/users" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Users className="h-4 w-4" />
+              Users
+            </Button>
+          </Link>
+        </div>
 
         <div className="flex items-center gap-4">
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
