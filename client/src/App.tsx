@@ -12,6 +12,7 @@ import UsersPage from "@/pages/users-page";
 import TOSPage from "@/pages/tos-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
+import { NotificationProvider } from "@/components/notification-provider";
 
 function Router() {
   return (
@@ -32,8 +33,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <NotificationProvider>
+          <Router />
+          <Toaster />
+        </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

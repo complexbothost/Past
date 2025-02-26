@@ -17,6 +17,7 @@ import PasteForm from "@/components/paste-form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import NotificationDrawer from "@/components/notification-drawer";
 
 export default function Header() {
   const [_, navigate] = useLocation();
@@ -103,6 +104,9 @@ export default function Header() {
               </div>
             </SheetContent>
           </Sheet>
+
+          {/* Notification Drawer */}
+          <NotificationDrawer />
 
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>

@@ -10,6 +10,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/hooks/use-auth";
+import { Separator } from "@/components/ui/separator";
 
 interface PasteFormProps {
   onSuccess?: () => void;
@@ -18,18 +20,27 @@ interface PasteFormProps {
 type FormValues = z.infer<typeof insertPasteSchema>;
 
 export default function PasteForm({ onSuccess }: PasteFormProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin;
+
   const form = useForm<FormValues>({
     resolver: zodResolver(insertPasteSchema),
     defaultValues: {
       title: "",
       content: "",
       isPrivate: false,
+      isAdminPaste: false,
+      isPinned: false,
+      extraDetails: "",
     },
   });
 
   const createPasteMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      const res = await apiRequest("POST", "/api/pastes", data);
+      // Calculate pinnedUntil date (24 hours from now) if isPinned is true
+      const pasteData = { ...data };
+
+      const res = await apiRequest("POST", "/api/pastes", pasteData);
       return res.json();
     },
     onSuccess: () => {
@@ -43,7 +54,14 @@ export default function PasteForm({ onSuccess }: PasteFormProps) {
   });
 
   const onSubmit = (data: FormValues) => {
-    createPasteMutation.mutate(data);
+    // Only include admin fields if user is admin
+    if (isAdmin) {
+      createPasteMutation.mutate(data);
+    } else {
+      // Strip out admin-only fields if somehow included
+      const { isAdminPaste, isPinned, extraDetails, ...regularData } = data;
+      createPasteMutation.mutate(regularData as FormValues);
+    }
   };
 
   return (
@@ -101,6 +119,76 @@ export default function PasteForm({ onSuccess }: PasteFormProps) {
             </FormItem>
           )}
         />
+
+        {/* Admin-only options */}
+        {isAdmin && (
+          <>
+            <Separator className="my-4" />
+            <div className="p-3 border rounded-lg border-white/20 bg-zinc-900">
+              <h3 className="text-sm font-medium mb-2">Admin Options</h3>
+
+              <FormField
+                control={form.control}
+                name="isAdminPaste"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between mb-2">
+                    <div className="space-y-0.5">
+                      <FormLabel>Admin Paste</FormLabel>
+                      <FormDescription>
+                        Highlight with rainbow colors and make 2x larger
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isPinned"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between mb-2">
+                    <div className="space-y-0.5">
+                      <FormLabel>Pin to Top</FormLabel>
+                      <FormDescription>
+                        Pin this paste to the top for 24 hours
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="extraDetails"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Extra Details</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Add extra information for this admin paste..."
+                        className="min-h-[80px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </>
+        )}
 
         <Button 
           type="submit" 

@@ -8,6 +8,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import express from 'express';
+import { WebSocketServer, WebSocket } from 'ws';
 
 // Middleware to check if user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
@@ -53,6 +54,18 @@ const upload = multer({
   }
 });
 
+// Store active WebSocket connections
+const activeConnections: Map<number, WebSocket> = new Map();
+
+// Send notification to all connected users
+const notifyAllUsers = (message: any) => {
+  activeConnections.forEach((ws) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(message));
+    }
+  });
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
@@ -61,6 +74,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/pastes", async (req, res) => {
     try {
       const pastes = await storage.getPublicPastes();
+
+      // Sort pastes: pinned admin pastes first, then by creation date
+      pastes.sort((a, b) => {
+        // Check if paste is pinned (pinnedUntil time is in the future)
+        const aIsPinned = a.isPinned && a.pinnedUntil && new Date(a.pinnedUntil) > new Date();
+        const bIsPinned = b.isPinned && b.pinnedUntil && new Date(b.pinnedUntil) > new Date();
+
+        // First sort by pinned status
+        if (aIsPinned && !bIsPinned) return -1;
+        if (!aIsPinned && bIsPinned) return 1;
+
+        // Then sort by creation date (newest first)
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+
       res.json(pastes);
     } catch (err) {
       res.status(500).json({ message: "Error retrieving pastes" });
@@ -102,10 +130,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/pastes", isAuthenticated, async (req, res) => {
     try {
       const pasteData = insertPasteSchema.parse(req.body);
+
+      // Handle admin paste specific fields
+      let adminPasteData = {};
+      if (req.user!.isAdmin) {
+        // If user is admin and requested admin paste features
+        if (pasteData.isAdminPaste) {
+          // Set admin paste fields
+          adminPasteData = {
+            isAdminPaste: true,
+            isPinned: pasteData.isPinned || false,
+            extraDetails: pasteData.extraDetails || '',
+          };
+
+          // If paste should be pinned, set pinnedUntil to 24 hours from now
+          if (pasteData.isPinned) {
+            const pinnedUntil = new Date();
+            pinnedUntil.setHours(pinnedUntil.getHours() + 24);
+            adminPasteData = {
+              ...adminPasteData,
+              pinnedUntil,
+            };
+          }
+        }
+      }
+
       const paste = await storage.createPaste({
         ...pasteData,
         userId: req.user!.id,
+        ...adminPasteData,
       });
+
+      // Notify all users if it's an admin paste
+      if (req.user!.isAdmin && pasteData.isAdminPaste) {
+        notifyAllUsers({
+          type: 'admin_paste',
+          message: `New admin paste: ${paste.title}`,
+          pasteId: paste.id,
+          authorName: req.user!.username
+        });
+      }
+
       res.status(201).json(paste);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -453,5 +518,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(uploadDir));
 
   const httpServer = createServer(app);
+
+  // Set up WebSocket server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  wss.on('connection', (ws, req) => {
+    // Assign a temporary ID if the user is not authenticated
+    let userId = 0;
+
+    // Extract real IP address from request
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : req.socket.remoteAddress;
+
+    // Set up message handler
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+
+        // Authenticate the WebSocket connection if token provided
+        if (data.type === 'auth' && data.userId) {
+          userId = parseInt(data.userId);
+          // Store the connection
+          activeConnections.set(userId, ws);
+        }
+      } catch (err) {
+        console.error('Error processing WebSocket message:', err);
+      }
+    });
+
+    // Clean up on disconnect
+    ws.on('close', () => {
+      if (userId > 0) {
+        activeConnections.delete(userId);
+      }
+    });
+
+    // Send initial connection acknowledgment
+    ws.send(JSON.stringify({ type: 'connection', status: 'connected', message: 'Welcome to DoxNightmare!' }));
+  });
+
   return httpServer;
 }

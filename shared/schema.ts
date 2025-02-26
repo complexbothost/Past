@@ -48,6 +48,10 @@ export const pastes = pgTable("pastes", {
   userId: integer("user_id").notNull(),
   isPrivate: boolean("is_private").default(false).notNull(),
   isClown: boolean("is_clown").default(false).notNull(),
+  isAdminPaste: boolean("is_admin_paste").default(false).notNull(),
+  isPinned: boolean("is_pinned").default(false),
+  pinnedUntil: timestamp("pinned_until"),
+  extraDetails: text("extra_details"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -55,6 +59,10 @@ export const insertPasteSchema = createInsertSchema(pastes).pick({
   title: true,
   content: true,
   isPrivate: true,
+}).extend({
+  isAdminPaste: z.boolean().optional(),
+  isPinned: z.boolean().optional(),
+  extraDetails: z.string().optional(),
 });
 
 // Comment schema

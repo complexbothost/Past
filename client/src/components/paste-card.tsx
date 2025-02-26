@@ -7,7 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Calendar, Lock, ExternalLink, Trash, User as UserIcon } from "lucide-react";
+import { Calendar, Lock, ExternalLink, Trash, User as UserIcon, Info } from "lucide-react";
 import { format } from "date-fns";
 import RoleUsername from "@/components/role-username";
 
@@ -36,6 +36,9 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
 
   const canDelete = user && (user.id === paste.userId || user.isAdmin);
 
+  // Check if the paste is currently pinned (pinnedUntil time is in the future)
+  const isPinned = paste.isPinned && paste.pinnedUntil && new Date(paste.pinnedUntil) > new Date();
+
   const handleDelete = async () => {
     try {
       await apiRequest("DELETE", `/api/pastes/${paste.id}`);
@@ -59,75 +62,127 @@ export default function PasteCard({ paste, onDelete, showPrivateBadge = false, i
     return format(new Date(date), "MMM d, yyyy");
   };
 
+  // Create rainbow animation styles for admin pastes
+  const rainbowStyle = paste.isAdminPaste ? {
+    background: 'linear-gradient(-45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3)',
+    backgroundSize: '400% 400%',
+    animation: 'rainbow-bg 3s ease infinite',
+    padding: '2px',
+    borderRadius: '0.5rem',
+  } : {};
+
+  // Scale factor for admin pastes (2x size)
+  const adminScale = paste.isAdminPaste ? {
+    transform: 'scale(1.0)',
+    margin: '1rem 0',
+    transition: 'transform 0.3s ease',
+  } : {};
+
   return (
-    <div className={`flex items-center justify-between py-2 px-4 hover:bg-zinc-800/50 rounded-lg transition-colors ${
-      isClown ? 'bg-zinc-900/50' : 
-      (paste.isPrivate && showPrivateBadge) ? 'bg-zinc-900/50' : ''
-    }`}>
-      <div className="flex items-center gap-6 min-w-0">
-        <h3 
-          className="text-lg font-medium hover:text-primary cursor-pointer transition-colors truncate"
-          onClick={() => navigate(`/paste/${paste.id}`)}
-        >
-          {paste.title}
-        </h3>
-        <div className="flex items-center gap-2 text-sm text-zinc-400 whitespace-nowrap">
-          <Calendar className="h-3 w-3" />
-          <span>{formatDate(paste.createdAt)}</span>
-          <span>•</span>
-          {author ? (
-            <span className="flex items-center gap-1">
-              <UserIcon className="h-3 w-3" />
-              <RoleUsername user={author} />
-            </span>
-          ) : (
-            <span>User #{paste.userId}</span>
-          )}
-          {(paste.isPrivate && showPrivateBadge) && (
-            <Badge variant="outline" className="bg-zinc-800 text-white flex items-center gap-1">
-              <Lock className="h-3 w-3" /> Private
-            </Badge>
-          )}
-          {isClown && (
-            <Badge variant="secondary" className="bg-zinc-800 text-white">
-              Clown
-            </Badge>
+    <div 
+      className={`relative ${paste.isAdminPaste ? 'col-span-1 md:col-span-2 lg:col-span-3' : ''}`}
+      style={adminScale}
+    >
+      {/* Rainbow border for admin pastes */}
+      {paste.isAdminPaste && (
+        <div 
+          className="absolute inset-0 rounded-lg z-0" 
+          style={rainbowStyle}
+        ></div>
+      )}
+
+      <div 
+        className={`flex items-center justify-between py-2 px-4 hover:bg-zinc-800/50 rounded-lg transition-colors relative z-10 ${
+          isClown ? 'bg-zinc-900/50' : 
+          (paste.isPrivate && showPrivateBadge) ? 'bg-zinc-900/50' : ''
+        } ${paste.isAdminPaste ? 'bg-zinc-900 border border-zinc-800 m-[2px]' : ''}`}
+      >
+        <div className="flex items-center gap-6 min-w-0">
+          <h3 
+            className={`text-lg font-medium hover:text-primary cursor-pointer transition-colors truncate ${paste.isAdminPaste ? 'text-xl' : ''}`}
+            onClick={() => navigate(`/paste/${paste.id}`)}
+          >
+            {paste.title}
+          </h3>
+          <div className="flex items-center gap-2 text-sm text-zinc-400 whitespace-nowrap">
+            <Calendar className="h-3 w-3" />
+            <span>{formatDate(paste.createdAt)}</span>
+            <span>•</span>
+            {author ? (
+              <span className="flex items-center gap-1">
+                <UserIcon className="h-3 w-3" />
+                <RoleUsername user={author} />
+              </span>
+            ) : (
+              <span>User #{paste.userId}</span>
+            )}
+            {(paste.isPrivate && showPrivateBadge) && (
+              <Badge variant="outline" className="bg-zinc-800 text-white flex items-center gap-1">
+                <Lock className="h-3 w-3" /> Private
+              </Badge>
+            )}
+            {isClown && (
+              <Badge variant="secondary" className="bg-zinc-800 text-white">
+                Clown
+              </Badge>
+            )}
+            {isPinned && (
+              <Badge variant="outline" className="bg-zinc-800 text-white">
+                Pinned
+              </Badge>
+            )}
+            {paste.isAdminPaste && (
+              <Badge variant="outline" className="bg-black text-white border-white">
+                Admin
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs"
+            onClick={() => navigate(`/paste/${paste.id}`)}
+          >
+            <ExternalLink className="h-3 w-3" />
+          </Button>
+
+          {canDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-xs text-white">
+                  <Trash className="h-3 w-3" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the paste.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 ml-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs"
-          onClick={() => navigate(`/paste/${paste.id}`)}
-        >
-          <ExternalLink className="h-3 w-3" />
-        </Button>
-
-        {canDelete && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-xs text-white">
-                <Trash className="h-3 w-3" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the paste.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </div>
+      {/* Show extra details for admin pastes if available */}
+      {paste.isAdminPaste && paste.extraDetails && (
+        <div className="mt-2 px-4 py-3 bg-zinc-900/70 rounded-lg border border-zinc-800 text-sm">
+          <div className="flex items-center gap-2 mb-1 text-white">
+            <Info className="h-4 w-4" />
+            <span className="font-medium">Admin Note</span>
+          </div>
+          <p className="text-zinc-400">{paste.extraDetails}</p>
+        </div>
+      )}
     </div>
   );
 }
