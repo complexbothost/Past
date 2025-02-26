@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { User, Paste } from "@shared/schema";
+import { User, Paste, UserRole } from "@shared/schema";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,8 @@ import { z } from "zod";
 import { useLocation } from "wouter";
 import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, Edit, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import RoleUsername from "@/components/role-username";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -254,18 +256,41 @@ export default function AdminPage() {
                                 className="p-0 h-auto font-medium" 
                                 onClick={() => navigateToUserProfile(u.id)}
                               >
-                                {u.username}
+                                <RoleUsername user={u} />
                               </Button>
                             </TableCell>
                             <TableCell>{u.ipAddress || 'Unknown'}</TableCell>
                             <TableCell>
-                              {u.isAdmin ? (
-                                <Badge variant="outline" className="bg-zinc-900 text-white">
-                                  Admin
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline">User</Badge>
-                              )}
+                              <Select
+                                value={u.role || ""}
+                                onValueChange={(value) => {
+                                  apiRequest("PATCH", `/api/admin/users/${u.id}/role`, {
+                                    role: value || null
+                                  }).then(() => {
+                                    refetchUsers();
+                                    toast({
+                                      title: "Role updated",
+                                      description: `Updated role for ${u.username}`,
+                                    });
+                                  }).catch((error) => {
+                                    toast({
+                                      title: "Error",
+                                      description: error.message || "Failed to update role",
+                                      variant: "destructive",
+                                    });
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="w-32">
+                                  <SelectValue placeholder="Select role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="">No Role</SelectItem>
+                                  <SelectItem value={UserRole.RICH}>Rich</SelectItem>
+                                  <SelectItem value={UserRole.FRAUD}>Fraud</SelectItem>
+                                  <SelectItem value={UserRole.GANG}>Gang</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </TableCell>
                             <TableCell>{formatDate(u.createdAt)}</TableCell>
                             <TableCell className="text-right">

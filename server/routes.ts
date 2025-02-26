@@ -248,6 +248,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint: Update user role (admin only)
+  app.patch("/api/admin/users/:id/role", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const { role } = req.body;
+      if (role && !Object.values(UserRole).includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+
+      const user = await storage.updateUser(id, { role });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Don't send the password back to the client
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (err) {
+      res.status(500).json({ message: "Error updating user role" });
+    }
+  });
+
   // New endpoint: Get user profile comments
   app.get("/api/users/:id/comments", async (req, res) => {
     try {
@@ -429,4 +455,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   return httpServer;
+}
+
+enum UserRole {
+  User = 'user',
+  Admin = 'admin'
 }

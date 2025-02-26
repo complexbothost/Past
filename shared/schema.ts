@@ -2,6 +2,15 @@ import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Role type
+export const UserRole = {
+  RICH: "rich",
+  FRAUD: "fraud",
+  GANG: "gang",
+} as const;
+
+export type UserRole = typeof UserRole[keyof typeof UserRole];
+
 // User schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -10,6 +19,7 @@ export const users = pgTable("users", {
   ipAddress: text("ip_address"),
   bio: text("bio").default(""),
   avatarUrl: text("avatar_url"),
+  role: text("role"),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -17,6 +27,11 @@ export const users = pgTable("users", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+});
+
+// Update role schema
+export const updateRoleSchema = z.object({
+  role: z.enum([UserRole.RICH, UserRole.FRAUD, UserRole.GANG]).nullable(),
 });
 
 // Bio update schema
@@ -63,3 +78,4 @@ export type Paste = typeof pastes.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type UpdateBio = z.infer<typeof updateBioSchema>;
+export type UpdateRole = z.infer<typeof updateRoleSchema>;

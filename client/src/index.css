@@ -10,4 +10,26 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* Glitch keyframes for 'gang' role */
+  @keyframes glitch {
+    0% {
+      text-shadow: 2px 2px #ff00ea, -2px -2px #00ff9d;
+    }
+    20% {
+      text-shadow: -2px -2px #ff00ea, 2px 2px #00ff9d;
+    }
+    40% {
+      text-shadow: 2px -2px #ff00ea, -2px 2px #00ff9d;
+    }
+    60% {
+      text-shadow: -2px 2px #ff00ea, 2px -2px #00ff9d;
+    }
+    80% {
+      text-shadow: 2px 2px #ff00ea, -2px -2px #00ff9d;
+    }
+    100% {
+      text-shadow: -2px -2px #ff00ea, 2px 2px #00ff9d;
+    }
+  }
 }
