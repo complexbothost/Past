@@ -10,6 +10,49 @@ import fs from "fs";
 import express from 'express';
 import { WebSocketServer, WebSocket } from 'ws';
 
+// IP restriction middleware
+const checkIPRestriction = async (req: Request, res: Response, next: Function) => {
+  try {
+    // Get the user's IP (accounting for proxies, which is common in Replit)
+    const ip = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || '';
+
+    // Skip check for static resources
+    if (req.path.startsWith('/uploads/') || req.path.startsWith('/assets/')) {
+      return next();
+    }
+
+    // Always allow access to the error page that will be shown for restricted IPs
+    if (req.path === '/api/restricted') {
+      return next();
+    }
+
+    // Skip check for admins that are already logged in
+    if (req.isAuthenticated() && req.user?.isAdmin) {
+      return next();
+    }
+
+    // Check if IP is restricted
+    const isRestricted = await storage.isIPRestricted(ip);
+    if (isRestricted) {
+      // For API requests, return JSON
+      if (req.path.startsWith('/api/')) {
+        return res.status(403).json({
+          error: 'IP_RESTRICTED',
+          message: 'Your IP address has been restricted from accessing this site.'
+        });
+      }
+
+      // For non-API requests, redirect to a page explaining the restriction
+      return res.redirect('/restricted');
+    }
+
+    next();
+  } catch (err) {
+    console.error('Error checking IP restriction:', err);
+    next();
+  }
+};
+
 // Middleware to check if user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
   if (req.isAuthenticated()) {
@@ -67,8 +110,19 @@ const notifyAllUsers = (message: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Apply IP restriction middleware to all routes
+  app.use(checkIPRestriction);
+
   // Setup authentication routes
   setupAuth(app);
+
+  // API endpoint to inform about IP restriction
+  app.get("/api/restricted", (req, res) => {
+    res.status(403).json({
+      error: 'IP_RESTRICTED',
+      message: 'Your IP address has been restricted from accessing this site.'
+    });
+  });
 
   // Search pastes by title
   app.get("/api/pastes/search", async (req, res) => {
@@ -108,6 +162,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(pastes);
     } catch (err) {
       res.status(500).json({ message: "Error retrieving pastes" });
+    }
+  });
+
+  // IP Restriction Admin Routes
+
+  // Get all restricted IPs
+  app.get("/api/admin/ip-restrictions", isAdmin, async (req, res) => {
+    try {
+      const restrictedIPs = await storage.getAllRestrictedIPs();
+      res.json(restrictedIPs);
+    } catch (err) {
+      res.status(500).json({ message: "Error retrieving IP restrictions" });
+    }
+  });
+
+  // Add IP restriction
+  app.post("/api/admin/ip-restrictions", isAdmin, async (req, res) => {
+    try {
+      const { ip, reason } = req.body;
+
+      if (!ip || !reason) {
+        return res.status(400).json({ message: "IP address and reason are required" });
+      }
+
+      // Simple IP validation
+      const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      if (!ipRegex.test(ip)) {
+        return res.status(400).json({ message: "Invalid IP address format" });
+      }
+
+      // Don't allow restricting your own IP
+      const userIP = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || '';
+      if (ip === userIP) {
+        return res.status(400).json({ message: "You cannot restrict your own IP address" });
+      }
+
+      await storage.addRestrictedIP(ip, reason, req.user!.id);
+
+      res.status(201).json({ message: "IP restricted successfully" });
+    } catch (err) {
+      res.status(500).json({ message: "Error adding IP restriction" });
+    }
+  });
+
+  // Remove IP restriction
+  app.delete("/api/admin/ip-restrictions/:ip", isAdmin, async (req, res) => {
+    try {
+      const ip = req.params.ip;
+
+      const success = await storage.removeRestrictedIP(ip);
+      if (!success) {
+        return res.status(404).json({ message: "IP restriction not found" });
+      }
+
+      res.status(200).json({ message: "IP restriction removed successfully" });
+    } catch (err) {
+      res.status(500).json({ message: "Error removing IP restriction" });
     }
   });
 

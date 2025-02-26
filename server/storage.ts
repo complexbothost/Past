@@ -31,6 +31,12 @@ export interface IStorage {
   createComment(comment: InsertComment & { userId: number }): Promise<Comment>;
   deleteComment(id: number): Promise<boolean>;
 
+  // IP restriction operations
+  addRestrictedIP(ip: string, reason: string, restrictedBy: number): Promise<void>;
+  removeRestrictedIP(ip: string): Promise<boolean>;
+  isIPRestricted(ip: string): Promise<boolean>;
+  getAllRestrictedIPs(): Promise<Array<{ ip: string, reason: string, restrictedBy: number, restrictedAt: Date }>>;
+
   // Session storage
   sessionStore: SessionStore;
 }
@@ -39,6 +45,7 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private pastes: Map<number, Paste>;
   private comments: Map<number, Comment>;
+  private restrictedIPs: Map<string, { ip: string, reason: string, restrictedBy: number, restrictedAt: Date }>;
   sessionStore: SessionStore;
   userCurrentId: number;
   pasteCurrentId: number;
@@ -48,6 +55,7 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.pastes = new Map();
     this.comments = new Map();
+    this.restrictedIPs = new Map();
     this.userCurrentId = 1;
     this.pasteCurrentId = 1;
     this.commentCurrentId = 1;
@@ -202,6 +210,28 @@ export class MemStorage implements IStorage {
 
   async deleteComment(id: number): Promise<boolean> {
     return this.comments.delete(id);
+  }
+
+  // IP restriction operations
+  async addRestrictedIP(ip: string, reason: string, restrictedBy: number): Promise<void> {
+    this.restrictedIPs.set(ip, {
+      ip,
+      reason,
+      restrictedBy,
+      restrictedAt: new Date()
+    });
+  }
+
+  async removeRestrictedIP(ip: string): Promise<boolean> {
+    return this.restrictedIPs.delete(ip);
+  }
+
+  async isIPRestricted(ip: string): Promise<boolean> {
+    return this.restrictedIPs.has(ip);
+  }
+
+  async getAllRestrictedIPs(): Promise<Array<{ ip: string, reason: string, restrictedBy: number, restrictedAt: Date }>> {
+    return Array.from(this.restrictedIPs.values());
   }
 }
 

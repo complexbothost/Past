@@ -10,6 +10,7 @@ import AdminPage from "@/pages/admin-page";
 import UserProfilePage from "@/pages/user-profile-page";
 import UsersPage from "@/pages/users-page";
 import TOSPage from "@/pages/tos-page";
+import RestrictedPage from "@/pages/restricted-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute, AdminRoute } from "@/lib/protected-route";
 import { NotificationProvider } from "@/components/notification-provider";
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/users" component={UsersPage} />
       <Route path="/user/:id" component={UserProfilePage} />
       <Route path="/tos" component={TOSPage} />
+      <Route path="/restricted" component={RestrictedPage} />
       <AdminRoute path="/admin" component={AdminPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

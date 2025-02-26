@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
-import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, Edit, User as UserIcon, Pin, PinOff } from "lucide-react";
+import { Users, FileText, Link, LockOpen, UserX, Shield, Eye, Edit, User as UserIcon, Pin, PinOff, ShieldBan } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RoleUsername from "@/components/role-username";
@@ -32,6 +32,7 @@ export default function AdminPage() {
   const [selectedPaste, setSelectedPaste] = useState<Paste | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [pasteToEdit, setPasteToEdit] = useState<Paste | null>(null);
+  const [isAddIPDialogOpen, setIsAddIPDialogOpen] = useState(false);
 
   // Get all users
   const {
@@ -51,6 +52,15 @@ export default function AdminPage() {
     queryKey: ["/api/pastes"],
   });
 
+  // Get all restricted IPs
+  const {
+    data: restrictedIPs,
+    isLoading: restrictedIPsLoading,
+    refetch: refetchRestrictedIPs
+  } = useQuery<Array<{ ip: string; reason: string; restrictedBy: number; restrictedAt: Date }>>({
+    queryKey: ["/api/admin/ip-restrictions"],
+  });
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -67,6 +77,49 @@ export default function AdminPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to delete user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add IP restriction mutation
+  const addIPRestrictionMutation = useMutation({
+    mutationFn: async ({ ip, reason }: { ip: string; reason: string }) => {
+      await apiRequest("POST", "/api/admin/ip-restrictions", { ip, reason });
+    },
+    onSuccess: () => {
+      toast({
+        title: "IP restricted",
+        description: "The IP address has been successfully restricted",
+      });
+      refetchRestrictedIPs();
+      setIsAddIPDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to restrict IP",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Remove IP restriction mutation
+  const removeIPRestrictionMutation = useMutation({
+    mutationFn: async (ip: string) => {
+      await apiRequest("DELETE", `/api/admin/ip-restrictions/${ip}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "IP restriction removed",
+        description: "The IP restriction has been successfully removed",
+      });
+      refetchRestrictedIPs();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove IP restriction",
         variant: "destructive",
       });
     },
@@ -127,6 +180,22 @@ export default function AdminPage() {
     isAdminPaste: z.boolean().default(false),
     isPinned: z.boolean().default(false),
     extraDetails: z.string().optional(),
+    pinnedUntil: z.date().nullable().optional(),
+  });
+
+  // Add IP restriction form schema
+  const addIPSchema = z.object({
+    ip: z.string().min(7, "IP address is required").regex(/^(\d{1,3}\.){3}\d{1,3}$/, "Invalid IP format"),
+    reason: z.string().min(1, "Reason is required"),
+  });
+
+  // Add IP restriction form
+  const addIPForm = useForm<z.infer<typeof addIPSchema>>({
+    resolver: zodResolver(addIPSchema),
+    defaultValues: {
+      ip: "",
+      reason: "",
+    },
   });
 
   // Edit paste form
@@ -140,6 +209,7 @@ export default function AdminPage() {
       isAdminPaste: false,
       isPinned: false,
       extraDetails: "",
+      pinnedUntil: null,
     },
   });
 
@@ -154,6 +224,7 @@ export default function AdminPage() {
       isAdminPaste: paste.isAdminPaste || false,
       isPinned: paste.isPinned || false,
       extraDetails: paste.extraDetails || "",
+      pinnedUntil: paste.pinnedUntil || null,
     });
     setIsEditDialogOpen(true);
   };
@@ -181,12 +252,21 @@ export default function AdminPage() {
     }
   };
 
+  // Handle submit add IP form
+  const onSubmitAddIPForm = (data: z.infer<typeof addIPSchema>) => {
+    addIPRestrictionMutation.mutate(data);
+  };
+
   const formatDate = (date: Date | string) => {
     return format(new Date(date), "MMM d, yyyy");
   };
 
   const handleDeleteUser = (userId: number) => {
     deleteUserMutation.mutate(userId);
+  };
+
+  const handleRemoveIPRestriction = (ip: string) => {
+    removeIPRestrictionMutation.mutate(ip);
   };
 
   const handleMarkAsClown = (paste: Paste) => {
@@ -268,7 +348,7 @@ export default function AdminPage() {
         </div>
 
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-8">
+          <TabsList className="grid grid-cols-3 mb-8">
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Users
@@ -276,6 +356,10 @@ export default function AdminPage() {
             <TabsTrigger value="pastes" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               Pastes
+            </TabsTrigger>
+            <TabsTrigger value="ip-restrictions" className="flex items-center gap-2">
+              <ShieldBan className="h-4 w-4" />
+              IP Restrictions
             </TabsTrigger>
           </TabsList>
 
@@ -565,6 +649,153 @@ export default function AdminPage() {
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     No pastes found in the system.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* New IP Restrictions Tab */}
+          <TabsContent value="ip-restrictions" className="pt-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>IP Restrictions</CardTitle>
+                  <CardDescription>
+                    Restrict access to the platform by IP address
+                  </CardDescription>
+                </div>
+                <Dialog open={isAddIPDialogOpen} onOpenChange={setIsAddIPDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="bg-zinc-800 hover:bg-zinc-700 border border-white/10">
+                      <ShieldBan className="h-4 w-4 mr-2" />
+                      Restrict IP
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Restrict IP Address</DialogTitle>
+                      <DialogDescription>
+                        Enter the IP address you want to restrict and provide a reason.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...addIPForm}>
+                      <form onSubmit={addIPForm.handleSubmit(onSubmitAddIPForm)} className="space-y-4 pt-2">
+                        <FormField
+                          control={addIPForm.control}
+                          name="ip"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>IP Address</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="127.0.0.1"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={addIPForm.control}
+                          name="reason"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Reason</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Reason for IP restriction..."
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex justify-end gap-2 pt-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsAddIPDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={addIPRestrictionMutation.isPending}
+                          >
+                            {addIPRestrictionMutation.isPending ? "Restricting..." : "Restrict IP"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent>
+                {restrictedIPsLoading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="h-8 w-8 text-primary">Loading...</div>
+                  </div>
+                ) : restrictedIPs && restrictedIPs.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>IP Address</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead>Restricted By</TableHead>
+                          <TableHead>Restricted At</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {restrictedIPs.map((ip) => (
+                          <TableRow key={ip.ip}>
+                            <TableCell className="font-mono">{ip.ip}</TableCell>
+                            <TableCell>{ip.reason}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="link"
+                                className="p-0 h-auto"
+                                onClick={() => navigateToUserProfile(ip.restrictedBy)}
+                              >
+                                User #{ip.restrictedBy}
+                              </Button>
+                            </TableCell>
+                            <TableCell>{formatDate(ip.restrictedAt)}</TableCell>
+                            <TableCell>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <LockOpen className="h-4 w-4 mr-1" /> Remove Restriction
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This will remove the restriction and allow access from this IP address.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleRemoveIPRestriction(ip.ip)}>
+                                      Remove Restriction
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No IP restrictions found. Click "Restrict IP" to add one.
                   </div>
                 )}
               </CardContent>
