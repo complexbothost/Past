@@ -13,7 +13,7 @@ export default function UsersPage() {
 
   // Get all users
   const { data: users, isLoading } = useQuery<User[]>({
-    queryKey: ["/api/admin/users"],
+    queryKey: ["/api/users"],
   });
 
   const formatDate = (date: Date | string) => {
@@ -59,9 +59,6 @@ export default function UsersPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-zinc-300 mb-4 line-clamp-2">
-                    {user.bio || "This user hasn't written a bio yet."}
-                  </p>
                   <Button 
                     variant="outline" 
                     size="sm" 
