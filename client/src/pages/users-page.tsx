@@ -2,11 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { useLocation } from "wouter";
 import PageLayout from "@/components/layout/page-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { User as UserIcon } from "lucide-react";
 
 export default function UsersPage() {
   const [_, navigate] = useLocation();
@@ -46,29 +44,23 @@ export default function UsersPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="space-y-1">
-                      <CardTitle className="text-lg">{user.username}</CardTitle>
-                      <CardDescription>
-                        Joined {formatDate(user.createdAt)}
+                      <CardTitle 
+                        className="text-lg hover:text-primary cursor-pointer transition-colors"
+                        onClick={() => navigate(`/user/${user.id}`)}
+                      >
+                        {user.username}
+                      </CardTitle>
+                      <div className="text-sm text-zinc-400">
+                        ID: {user.id} • Joined {formatDate(user.createdAt)}
                         {user.isAdmin && (
                           <span className="ml-2 bg-zinc-800 text-white text-xs px-2 py-0.5 rounded">
                             Admin
                           </span>
                         )}
-                      </CardDescription>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => navigate(`/user/${user.id}`)}
-                  >
-                    <UserIcon className="h-4 w-4 mr-2" />
-                    View Profile
-                  </Button>
-                </CardContent>
               </Card>
             ))}
           </div>
