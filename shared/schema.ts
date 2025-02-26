@@ -9,7 +9,8 @@ export const UserRole = {
   GANG: "gang",
 } as const;
 
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+// Create a type from the object values
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 // User schema
 export const users = pgTable("users", {
