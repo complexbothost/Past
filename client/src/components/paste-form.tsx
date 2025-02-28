@@ -12,11 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/use-auth";
 import { Separator } from "@/components/ui/separator";
-import { useLocation } from "wouter"; // Import useLocation for navigation
+import { useLocation } from "wouter";
 
 interface PasteFormProps {
   onSuccess?: () => void;
-  skipRedirect?: boolean; // New prop to optionally skip redirect
+  skipRedirect?: boolean;
 }
 
 type FormValues = z.infer<typeof insertPasteSchema>;
@@ -24,7 +24,7 @@ type FormValues = z.infer<typeof insertPasteSchema>;
 export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
   const { user } = useAuth();
   const isAdmin = user?.isAdmin;
-  const [_, navigate] = useLocation(); // Get the navigate function for redirection
+  const [_, navigate] = useLocation();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(insertPasteSchema),
@@ -40,37 +40,26 @@ export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
 
   const createPasteMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      // Calculate pinnedUntil date (24 hours from now) if isPinned is true
       const pasteData = { ...data };
-
       const res = await apiRequest("POST", "/api/pastes", pasteData);
       return res.json();
     },
     onSuccess: (data) => {
-      // Reset the form
       form.reset();
-
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/pastes"] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/pastes"] });
-
-      // If onSuccess callback is provided, call it (for dialog-based scenarios)
       if (onSuccess) {
         onSuccess();
-      } 
-      // If skipRedirect is not true, navigate to the newly created paste
-      else if (!skipRedirect) {
+      } else if (!skipRedirect) {
         navigate(`/paste/${data.id}`);
       }
     },
   });
 
   const onSubmit = (data: FormValues) => {
-    // Only include admin fields if user is admin
     if (isAdmin) {
       createPasteMutation.mutate(data);
     } else {
-      // Strip out admin-only fields if somehow included
       const { isAdminPaste, isPinned, extraDetails, ...regularData } = data;
       createPasteMutation.mutate(regularData as FormValues);
     }
@@ -78,17 +67,17 @@ export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
         <FormField
           control={form.control}
           name="title"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
+            <FormItem className="space-y-1">
+              <FormLabel className="text-sm">Title</FormLabel>
               <FormControl>
-                <Input placeholder="Enter a title for your paste" {...field} />
+                <Input placeholder="Enter title" className="h-8" {...field} />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -97,16 +86,16 @@ export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
           control={form.control}
           name="content"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Content</FormLabel>
+            <FormItem className="space-y-1">
+              <FormLabel className="text-sm">Content</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Enter your paste content here..."
-                  className="min-h-[150px]"
+                  placeholder="Enter content..."
+                  className="min-h-[100px] resize-none text-sm"
                   {...field} 
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -115,11 +104,11 @@ export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
           control={form.control}
           name="isPrivate"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-              <div className="space-y-0.5">
-                <FormLabel>Private Paste</FormLabel>
-                <FormDescription>
-                  Only you will be able to see this paste
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-2 space-y-0">
+              <div>
+                <FormLabel className="text-sm">Private Paste</FormLabel>
+                <FormDescription className="text-xs">
+                  Only you can see this paste
                 </FormDescription>
               </div>
               <FormControl>
@@ -132,22 +121,21 @@ export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
           )}
         />
 
-        {/* Admin-only options */}
         {isAdmin && (
           <>
-            <Separator className="my-4" />
-            <div className="p-3 border rounded-lg border-white/20 bg-zinc-900">
-              <h3 className="text-sm font-medium mb-2">Admin Options</h3>
+            <Separator className="my-2" />
+            <div className="p-2 border rounded-lg border-white/20 bg-zinc-900 space-y-2">
+              <h3 className="text-xs font-medium">Admin Options</h3>
 
               <FormField
                 control={form.control}
                 name="isAdminPaste"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between mb-2">
-                    <div className="space-y-0.5">
-                      <FormLabel>Admin Paste</FormLabel>
-                      <FormDescription>
-                        Highlight with rainbow colors and make 2x larger
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                      <FormLabel className="text-sm">Admin Paste</FormLabel>
+                      <FormDescription className="text-xs">
+                        Rainbow highlight & 2x size
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -164,11 +152,11 @@ export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
                 control={form.control}
                 name="isPinned"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between mb-2">
-                    <div className="space-y-0.5">
-                      <FormLabel>Pin to Top</FormLabel>
-                      <FormDescription>
-                        Pin this paste to the top for 24 hours
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                      <FormLabel className="text-sm">Pin to Top</FormLabel>
+                      <FormDescription className="text-xs">
+                        Pin for 24 hours
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -185,16 +173,16 @@ export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
                 control={form.control}
                 name="extraDetails"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Extra Details</FormLabel>
+                  <FormItem className="space-y-1">
+                    <FormLabel className="text-sm">Extra Details</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Add extra information for this admin paste..."
-                        className="min-h-[80px]"
+                        placeholder="Add admin note..."
+                        className="min-h-[60px] resize-none text-sm"
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -204,7 +192,7 @@ export default function PasteForm({ onSuccess, skipRedirect }: PasteFormProps) {
 
         <Button 
           type="submit" 
-          className="w-full"
+          className="w-full h-8 text-sm"
           disabled={createPasteMutation.isPending}
         >
           {createPasteMutation.isPending ? "Creating..." : "Create Paste"}
