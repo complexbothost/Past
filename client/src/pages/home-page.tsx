@@ -96,9 +96,9 @@ export default function HomePage() {
                 New Paste
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-zinc-900 border-white/10 p-4">
-              <DialogHeader>
-                <DialogTitle>Create New Paste</DialogTitle>
+            <DialogContent className="sm:max-w-[375px] bg-zinc-900 border-white/10 p-3">
+              <DialogHeader className="space-y-2 pb-2">
+                <DialogTitle className="text-lg">Create New Paste</DialogTitle>
               </DialogHeader>
               <PasteForm onSuccess={handlePasteCreated} />
             </DialogContent>
